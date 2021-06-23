@@ -1,0 +1,8 @@
+# -*- coding: utf-8 -*-
+# **************************************************************************
+# Module to declare viewers
+# Find documentation here: https://scipion-em.github.io/docs/docs/developer/creating-a-viewer
+# **************************************************************************
+
+from fpocket.viewers.viewer_pockets import viewerFPocket
+from fpocket.viewers.viewers import PyMolViewer
