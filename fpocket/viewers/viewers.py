@@ -25,11 +25,11 @@
 # **************************************************************************
 
 import os
+from subprocess import Popen
 
 import pyworkflow.utils as pwutils
 import pyworkflow.viewer as pwviewer
-
-from modellerScipion.protocols import modellerMutateResidue
+from pwem.viewers import Vmd, VmdView
 
 
 class PyMol:
@@ -48,22 +48,29 @@ class PyMol:
 
 class PyMolView(pwviewer.CommandView):
     """ View for calling an external command. """
-    def __init__(self, pymolCommand, cwd, **kwargs):
-        pwviewer.CommandView.__init__(self, 'pymol %s' % pymolCommand,
+    def __init__(self, pymolArgs, cwd, **kwargs):
+        pwviewer.CommandView.__init__(self, ['pymol', *pymolArgs.split()],
                                       cwd=cwd,
                                       env=PyMol.getEnviron(), **kwargs)
 
     def show(self):
-        pwutils.runJob(None, '', self._cmd, cwd=self._cwd, env=PyMol.getEnviron())
+        Popen(self._cmd, cwd=self._cwd, env=PyMol.getEnviron())
 
 
 class PyMolViewer(pwviewer.Viewer):
     """ Wrapper to visualize pml objects with PyMol viewer. """
     _environments = [pwviewer.DESKTOP_TKINTER]
-    _targets = [modellerMutateResidue]
 
     def __init__(self, **args):
         pwviewer.Viewer.__init__(self, **args)
 
     def visualize(self, pymolFile, cwd, **args):
         PyMolView(pymolFile, cwd).show()
+
+class VmdViewFpocket(VmdView):
+    def __init__(self, vmdArgs, **kwargs):
+        pwviewer.CommandView.__init__(self, ['vmd', *vmdArgs.split()],
+                                      env=Vmd.getEnviron(), **kwargs)
+
+    def show(self):
+        Popen(self._cmd, cwd=self._cwd, env=Vmd.getEnviron())

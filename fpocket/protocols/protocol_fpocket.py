@@ -37,6 +37,7 @@ from pyworkflow.utils import Message
 import os, shutil
 from fpocket import Plugin
 from pwem.objects.data import AtomStruct
+from ..constants import *
 
 class fpocketFindPockets(EMProtocol):
     """
@@ -54,8 +55,58 @@ class fpocketFindPockets(EMProtocol):
                        label="Input atom structure",
                        help='Select the atom structure to be fitted in the volume')
 
+        #Option in fpocket but scipion blocks when specified
+        #form.addParam('interGrids', params.BooleanParam, default=False,
+        #               label='Calculate interaction grids',
+        #               help='Specify this flag if you want fpocket to calculate VdW and Coulomb grids for each pocket')
+
+        form.addSection(label='Pocket detection parameters')
+        group = form.addGroup('Alpha spheres')
+        group.addParam('minAlpha', params.FloatParam, default=3.4,
+                       label='Min alpha sphere radius',
+                       help='Minimum radius of an alpha-sphere (A)')
+        group.addParam('maxAlpha', params.FloatParam, default=6.2,
+                      label='Max alpha sphere radius',
+                      help='Maximum radius of an alpha-sphere (A)')
+        group.addParam('minNSpheres', params.IntParam, default=15,
+                       label='Min a-spheres per pocket',
+                       help='Minimum number of a-sphere per pocket')
+        group.addParam('ratioApSpheres', params.FloatParam, default=0.0,
+                       label='Min ratio of a-spheres', expertLevel=params.LEVEL_ADVANCED,
+                       help='Minimum proportion of apolar sphere in a pocket (remove otherwise)')
+        group.addParam('minApNeigh', params.IntParam, default=3,
+                       label='Min apolar neigh per sphere', expertLevel=params.LEVEL_ADVANCED,
+                       help='Minimum number of apolar neighbor for an a-sphere to be considered as apolar.')
+        group = form.addGroup('Clustering')
+        group.addParam('clustType', params.EnumParam,
+                       choices=CLUST_TYPES, label="Clustering linkage type", default=0,
+                       help='Specify the clustering method wanted for grouping voronoi vertices together')
+        group.addParam('clustDistType', params.EnumParam,
+                       choices=DIST_TYPES, label="Clustering distance type", default=0,
+                       help='Specify the distance measure for clustering')
+        group.addParam('clustDist', params.FloatParam, default=2.4,
+                       label='Clustering distance threshold',
+                       help='Distance threshold for clustering algorithm')
+        form.addParam('mcIterVol', params.IntParam, default=300, expertLevel=params.LEVEL_ADVANCED,
+                       label='Monte-Carlo iterations for volume',
+                       help='Number of Monte-Carlo iteration for the calculation of each pocket volume.')
+
+
     def _getFpocketArgs(self):
       args = ['-f', os.path.abspath(self.inpFile)]
+      #if self.interGrids.get():
+      #  args += ['-x']
+
+      #Alpha spheres
+      args += ['-m', self.minAlpha.get(), '-M', self.maxAlpha.get(), '-i', self.minNSpheres.get(),
+               '-p', self.ratioApSpheres.get(), '-A', self.minApNeigh.get()]
+      #Clustering
+      args += ['-C', CLUST_TYPES_CODES[self.clustType.get()],
+               '-e', DIST_TYPES_CODES[self.clustDistType.get()],
+               '-D', self.clustDist.get()]
+      #Volume
+      args += ['-v', self.mcIterVol.get()]
+
       return args
 
     # --------------------------- STEPS functions ------------------------------
