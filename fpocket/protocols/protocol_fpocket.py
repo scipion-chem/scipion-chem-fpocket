@@ -36,6 +36,7 @@ from pwem.protocols import EMProtocol
 from pyworkflow.utils import Message
 import os, shutil
 from fpocket import Plugin
+from bioinformatics.objects import SetOfPockets, fpocketPocket
 from pwem.objects.data import AtomStruct
 from ..constants import *
 
@@ -134,6 +135,16 @@ class fpocketFindPockets(EMProtocol):
         outFile = AtomStruct(self._getExtraPath('{}/{}'.format(
           self.inpBase+'_out', self.inpBase+'_out'+self.ext)))
         self._defineOutputs(outputPDB=outFile)
+
+        pocketsDir = os.path.abspath(self._getExtraPath('{}/pockets'.format(self.inpBase+'_out')))
+        pocketFiles = os.listdir(pocketsDir)
+
+        outPockets = SetOfPockets(filename=self._getExtraPath('pockets.sqlite'))
+        for pFile in pocketFiles:
+          if '.pqr' in pFile:
+            pock = fpocketPocket(os.path.join(pocketsDir, pFile))
+            outPockets.append(pock)
+        self._defineOutputs(outputPockets=outPockets)
 
     # --------------------------- INFO functions -----------------------------------
     def _summary(self):
