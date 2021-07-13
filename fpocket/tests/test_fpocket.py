@@ -51,7 +51,7 @@ class TestFPocket(BaseTest):
             inputAtomStruct=self.protImportPDB.outputPdb)
 
         self.launchProtocol(protFPocket)
-        pdbOut = getattr(protFPocket, 'outputPDB', None)
+        pdbOut = getattr(protFPocket, 'outputAtomStruct', None)
         self.assertIsNotNone(pdbOut)
 
     def test_mutateResidue(self):

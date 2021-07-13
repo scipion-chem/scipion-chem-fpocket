@@ -134,7 +134,7 @@ class fpocketFindPockets(EMProtocol):
     def createOutputStep(self):
         outFile = AtomStruct(self._getExtraPath('{}/{}'.format(
           self.inpBase+'_out', self.inpBase+'_out'+self.ext)))
-        self._defineOutputs(outputPDB=outFile)
+        self._defineOutputs(outputAtomStruct=outFile)
 
         pocketsDir = os.path.abspath(self._getExtraPath('{}/pockets'.format(self.inpBase+'_out')))
         pocketFiles = os.listdir(pocketsDir)
