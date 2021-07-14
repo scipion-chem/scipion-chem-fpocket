@@ -26,7 +26,39 @@
 # **************************************************************************
 
 
-import pyworkflow.object as pwobj
-import pwem.objects.data as data
-from pwem.objects.data import AtomStruct
+from pwchem.objects import proteinPocket
 
+
+class fpocketPocket(proteinPocket):
+  """ Represent a pocket file from fpocket"""
+  def __init__(self, filename=None, **kwargs):
+    proteinPocket.__init__(self, filename, **kwargs)
+    self.properties, self.pocketId = self.parseFile(filename)
+    self.setObjId(self.pocketId)
+
+  def __str__(self):
+    s = 'Fpocket pocket {}\nFile: {}'.format(self.pocketId, self.getFileName())
+    return s
+
+  def getVolume(self):
+    return self.properties['Real volume (approximation)']
+
+  def getPocketScore(self):
+    return self.properties['Pocket Score']
+
+  def getNumberOfVertices(self):
+    return self.properties['Number of V. Vertices']
+
+  def parseFile(self, filename):
+    props = {}
+    ini, parse = 'HEADER Information', False
+    with open(filename) as f:
+      for line in f:
+        if line.startswith(ini):
+          parse=True
+          pocketId = int(line.split()[-1].replace(':', ''))
+        elif line.startswith('HEADER') and parse:
+          name = line.split('-')[1].split(':')[0]
+          val = line.split(':')[-1]
+          props[name.strip()] = float(val.strip())
+    return props, pocketId
