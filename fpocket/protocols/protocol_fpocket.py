@@ -36,7 +36,7 @@ from pwem.protocols import EMProtocol
 from pyworkflow.utils import Message
 import os, shutil
 from fpocket import Plugin
-from bioinformatics.objects import SetOfPockets, fpocketPocket
+from pwchem.objects import SetOfPockets, fpocketPocket
 from pwem.objects.data import AtomStruct
 from ..constants import *
 
