@@ -25,7 +25,7 @@ with open('requirements.txt') as f:
 setup(
     name='scipion-chem-fpocket',  # Required
     version='0.1',  # Required
-    description='Scipion plugin in order to use tools provided by Modeller software suite.',  # Required
+    description='Scipion plugin in order to use ther fpocket software',  # Required
     long_description=long_description,  # Optional
     url='https://github.com/scipion-chem/scipion-chem-fpocket',  # Optional
     author='Daniel Del Hoyo',  # Optional

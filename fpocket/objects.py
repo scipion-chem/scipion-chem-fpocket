@@ -26,13 +26,13 @@
 # **************************************************************************
 
 
-from pwchem.objects import proteinPocket
+from pwchem.objects import ProteinPocket
 
 
-class fpocketPocket(proteinPocket):
+class FpocketPocket(ProteinPocket):
   """ Represent a pocket file from fpocket"""
   def __init__(self, filename=None, **kwargs):
-    proteinPocket.__init__(self, filename, **kwargs)
+    ProteinPocket.__init__(self, filename, **kwargs)
     self.properties, self.pocketId = self.parseFile(filename)
     self.setObjId(self.pocketId)
 

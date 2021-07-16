@@ -39,12 +39,11 @@ from fpocket import Plugin
 from pwchem.objects import SetOfPockets
 from pwem.objects.data import AtomStruct
 from ..constants import *
-from ..objects import fpocketPocket
+from ..objects import FpocketPocket
 
-class fpocketFindPockets(EMProtocol):
+class FpocketFindPockets(EMProtocol):
     """
-    Performs a residue substitution in a protein structure.
-    https://salilab.org/modeller/wiki/Mutate%20model
+    Executes the fpocket software to look for protein pockets.
     """
     _label = 'Find pockets'
 
@@ -143,7 +142,7 @@ class fpocketFindPockets(EMProtocol):
         outPockets = SetOfPockets(filename=self._getExtraPath('pockets.sqlite'))
         for pFile in pocketFiles:
           if '.pqr' in pFile:
-            pock = fpocketPocket(os.path.join(pocketsDir, pFile))
+            pock = FpocketPocket(os.path.join(pocketsDir, pFile))
             outPockets.append(pock)
         self._defineOutputs(outputPockets=outPockets)
 

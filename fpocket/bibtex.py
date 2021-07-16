@@ -34,7 +34,7 @@
    Year="2016",
    Volume="54",
    Pages="5.6.1-5.6.37",
-   doy= "https://doi.org/10.1002/cpbi.3"
+   doi="https://doi.org/10.1002/cpbi.3"
 }
 
 @Article{Marti-Renom2000,

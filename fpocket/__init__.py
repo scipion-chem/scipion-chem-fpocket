@@ -52,19 +52,19 @@ class Plugin(pwem.Plugin):
         installationCmd += 'conda install -c conda-forge fpocket -p {} && '.format(cls._pluginHome)
 
         # Creating validation file
-        MODELLER_INSTALLED = '%s_installed' % FPOCKET
-        installationCmd += 'touch %s' % MODELLER_INSTALLED  # Flag installation finished
+        FPOCKET_INSTALLED = '%s_installed' % FPOCKET
+        installationCmd += 'touch %s' % FPOCKET_INSTALLED  # Flag installation finished
 
         env.addPackage(FPOCKET,
                        version=FPOCKET_DEFAULT_VERSION,
                        tar='void.tgz',
-                       commands=[(installationCmd, MODELLER_INSTALLED)],
+                       commands=[(installationCmd, FPOCKET_INSTALLED)],
                        neededProgs=["conda"],
                        default=True)
 
     @classmethod
     def runFpocket(cls, protocol, program, args, cwd=None):
-        """ Run Modeller command from a given protocol. """
+        """ Run Fpocket command from a given protocol. """
         print(protocol)
         protocol.runJob(join(cls._pluginHome, 'bin/{}'.format(program)), args, cwd=cwd)
 

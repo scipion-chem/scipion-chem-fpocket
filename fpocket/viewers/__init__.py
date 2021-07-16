@@ -5,4 +5,3 @@
 # **************************************************************************
 
 from fpocket.viewers.viewer_pockets import viewerFPocket
-from fpocket.viewers.viewers import PyMolViewer
