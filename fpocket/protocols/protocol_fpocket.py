@@ -154,3 +154,16 @@ class FpocketFindPockets(EMProtocol):
     def _methods(self):
         methods = []
         return methods
+
+    def _warnings(self):
+      """ Try to find warnings on define params. """
+      import re
+      warnings = []
+      inpFile = os.path.abspath(self.inputAtomStruct.get().getFileName())
+      with open(inpFile) as f:
+        fileStr = f.read()
+      if re.search('\nHETATM', fileStr):
+        warnings.append('The structure you are inputing has some *heteroatoms* (ligands).\n'
+                        'This will affect the results as its volume is also taken as target.')
+
+      return warnings
