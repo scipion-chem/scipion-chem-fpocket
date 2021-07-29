@@ -40,3 +40,7 @@ CLUST_TYPES_CODES = ['s', 'm', 'a', 'c']
 DIST_TYPES = ['Euclidean', 'Manhattan']
 DIST_TYPES_CODES = ['e', 'b']
 
+ATTRIBUTES_MAPPING = {'Pocket Score': 'score', 'Drug Score': 'druggability', 'Number of alpha spheres': 'nPoints',
+                      'Pocket volume (Monte Carlo)': 'volume', 'class': 'class',
+                      'contactAtoms': 'contactAtoms', 'contactResidues': 'contactResidues'}
+

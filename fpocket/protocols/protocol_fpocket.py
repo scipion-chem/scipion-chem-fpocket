@@ -132,17 +132,18 @@ class FpocketFindPockets(EMProtocol):
         Plugin.runFpocket(self, 'fpocket', args=self._getFpocketArgs(), cwd=self._getExtraPath())
 
     def createOutputStep(self):
-        outFile = AtomStruct(self._getExtraPath('{}/{}'.format(
-          self.inpBase+'_out', self.inpBase+'_out'+self.ext)))
-        self._defineOutputs(outputAtomStruct=outFile)
+        outFile = os.path.abspath(self._getExtraPath('{}/{}'.format(self.inpBase+'_out', self.inpBase+'_out'+self.ext)))
+        outStruct = AtomStruct(outFile)
+        self._defineOutputs(outputAtomStruct=outStruct)
 
         pocketsDir = os.path.abspath(self._getExtraPath('{}/pockets'.format(self.inpBase+'_out')))
         pocketFiles = os.listdir(pocketsDir)
 
         outPockets = SetOfPockets(filename=self._getExtraPath('pockets.sqlite'))
         for pFile in pocketFiles:
-          if '.pqr' in pFile:
-            pock = FpocketPocket(os.path.join(pocketsDir, pFile))
+          if '.pdb' in pFile:
+            pqrFile = os.path.join(pocketsDir, pFile.replace('atm.pdb', 'vert.pqr'))
+            pock = FpocketPocket(os.path.join(pocketsDir, pFile), outFile, pqrFile)
             outPockets.append(pock)
         self._defineOutputs(outputPockets=outPockets)
 

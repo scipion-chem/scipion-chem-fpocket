@@ -26,31 +26,28 @@
 # **************************************************************************
 
 
-from pwchem.objects import ProteinPocket
+from pwchem.objects import ProteinPocket, ProteinAtom, ProteinResidue
+from .constants import ATTRIBUTES_MAPPING as AM
+import numpy as np
+from pyworkflow.object import String
 
 
 class FpocketPocket(ProteinPocket):
   """ Represent a pocket file from fpocket"""
-  def __init__(self, filename=None, **kwargs):
-    ProteinPocket.__init__(self, filename, **kwargs)
+  def __init__(self, filename=None, proteinFile=None, pqrFile=None, **kwargs):
     self.properties, self.pocketId = self.parseFile(filename)
+    kwargs.update(self.getKwargs(self.properties, AM))
+    ProteinPocket.__init__(self, filename, proteinFile, **kwargs)
+    self._pqrFile = String(pqrFile)
     self.setObjId(self.pocketId)
 
   def __str__(self):
     s = 'Fpocket pocket {}\nFile: {}'.format(self.pocketId, self.getFileName())
     return s
 
-  def getVolume(self):
-    return self.properties['Real volume (approximation)']
-
-  def getPocketScore(self):
-    return self.properties['Pocket Score']
-
-  def getNumberOfVertices(self):
-    return self.properties['Number of V. Vertices']
-
   def parseFile(self, filename):
-    props = {}
+    props, atoms, residues = {}, [], []
+    atomsIds, residuesIds = [], []
     ini, parse = 'HEADER Information', False
     with open(filename) as f:
       for line in f:
@@ -61,4 +58,32 @@ class FpocketPocket(ProteinPocket):
           name = line.split('-')[1].split(':')[0]
           val = line.split(':')[-1]
           props[name.strip()] = float(val.strip())
+
+        elif line.startswith('ATOM') and parse:
+          atoms.append(ProteinAtom(line))
+          atomsIds.append(atoms[-1].atomId)
+          newResidue = ProteinResidue(line)
+          if not newResidue.residueId in residuesIds:
+            residues.append(newResidue)
+            residuesIds.append(newResidue.residueId)
+    props['contactAtoms'] = self.encodeIds(atomsIds)
+    props['contactResidues'] = self.encodeIds(residuesIds)
+    props['class'] = 'FPocket'
     return props, pocketId
+
+  def getSpheresRadius(self):
+    radius = []
+    with open(str(self._pqrFile)) as f:
+      for line in f:
+        if line.startswith('ATOM'):
+          radius.append(float(line.split()[-1]))
+    return radius
+
+  def getDiameter(self):
+    return self.getDiameterBase(np.array(self.getSpheresRadius()))
+
+  def calculateMassCenter(self):
+    '''Calculates the center of mass of a set of points: [(x,y,z), (x,y,z),...]
+    A weight for each point can be specified'''
+    return self.calculateMassCenterBase(weights=self.getSpheresRadius())
+

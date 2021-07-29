@@ -54,7 +54,7 @@ class viewerFPocket(pwviewer.ProtocolViewer):
   def _defineParams(self, form):
     form.addSection(label='Visualization of predicted pockets')
     form.addParam('displayAtomStruct', params.EnumParam,
-                  choices=['VMD', 'PyMol'],
+                  choices=['VMD', 'PyMol (Pocket Points)'],
                   default=VOLUME_VMD,
                   display=params.EnumParam.DISPLAY_HLIST,
                   label='Display output AtomStruct with',
