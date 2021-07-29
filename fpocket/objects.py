@@ -37,7 +37,7 @@ class FpocketPocket(ProteinPocket):
   def __init__(self, filename=None, proteinFile=None, pqrFile=None, **kwargs):
     self.properties, self.pocketId = self.parseFile(filename)
     kwargs.update(self.getKwargs(self.properties, AM))
-    ProteinPocket.__init__(self, filename, proteinFile, **kwargs)
+    super().__init__(filename, proteinFile, **kwargs)
     self._pqrFile = String(pqrFile)
     self.setObjId(self.pocketId)
 
@@ -80,10 +80,10 @@ class FpocketPocket(ProteinPocket):
     return radius
 
   def getDiameter(self):
-    return self.getDiameterBase(np.array(self.getSpheresRadius()))
+    return super().getDiameter(radius=np.array(self.getSpheresRadius()))
 
   def calculateMassCenter(self):
     '''Calculates the center of mass of a set of points: [(x,y,z), (x,y,z),...]
     A weight for each point can be specified'''
-    return self.calculateMassCenterBase(weights=self.getSpheresRadius())
+    return super().calculateMassCenter(weights=self.getSpheresRadius())
 
