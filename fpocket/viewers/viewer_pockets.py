@@ -25,65 +25,82 @@
 # **************************************************************************
 import os
 
-from ..protocols import fpocketFindPockets
+from ..protocols import FpocketFindPockets
 import pyworkflow.protocol.params as params
-from pwem.viewers import EmProtocolViewer
-import pyworkflow.utils as pwutils
-from .viewers import PyMolViewer
+import pyworkflow.viewer as pwviewer
+from pwchem.viewers import PyMolViewer
+from pwem.viewers import Vmd, VmdView
+
+from subprocess import Popen
 
 
 VOLUME_VMD, VOLUME_PYMOL = 0, 1
-FITTED_PDB, MOVIE_PDB = 0, 1
 
-class viewerFPocket(EmProtocolViewer):
+class VmdViewFpocket(VmdView):
+  def __init__(self, vmdArgs, **kwargs):
+    pwviewer.CommandView.__init__(self, ['vmd', *vmdArgs.split()],
+                                  env=Vmd.getEnviron(), **kwargs)
+
+  def show(self):
+    Popen(self._cmd, cwd=self._cwd, env=Vmd.getEnviron())
+
+class viewerFPocket(pwviewer.ProtocolViewer):
   _label = 'Viewer pockets'
-  _targets = [fpocketFindPockets]
+  _targets = [FpocketFindPockets]
+
+  def __init__(self, **kwargs):
+    pwviewer.ProtocolViewer.__init__(self, **kwargs)
 
   def _defineParams(self, form):
     form.addSection(label='Visualization of predicted pockets')
-    form.addParam('displayPDB', params.EnumParam,
-                  choices=['VMD', 'PyMol'],
+    form.addParam('displayAtomStruct', params.EnumParam,
+                  choices=['VMD', 'PyMol (Pocket Points)'],
                   default=VOLUME_VMD,
                   display=params.EnumParam.DISPLAY_HLIST,
-                  label='Display output PDB with',
+                  label='Display output AtomStruct with',
                   help='*PyMol*: display AtomStruct as cartoons with '
                        'PyMol.\n *VMD*: display AtomStruct and movies with VMD.'
                   )
 
   def _getVisualizeDict(self):
     return {
-      'displayPDB': self._showPDB,
+      'displayAtomStruct': self._showAtomStruct,
     }
 
   def _validate(self):
     return []
 
   # =========================================================================
-  # ShowPDBs
+  # ShowAtomStructs
   # =========================================================================
 
-  def _getPDBName(self):
-    pdbFile = self.protocol.inputAtomStruct.get().getFileName()
-    inpBase, _ = os.path.splitext(pdbFile.split('/')[-1])
-    return inpBase
+  def getOutputAtomStructFile(self):
+    return os.path.abspath(self.protocol.outputAtomStruct.getFileName())
 
-  def _showPDB(self, paramName=None):
-    if self.displayPDB == VOLUME_PYMOL:
-      return self._showPDBPyMol()
+  def _getAtomStructName(self):
+    outFile = self.getOutputAtomStructFile()
+    outName, _ = os.path.splitext(outFile.split('/')[-1])
+    return outName
 
-    elif self.displayPDB == VOLUME_VMD:
-      return self._showPDBVMD()
+  def _showAtomStruct(self, paramName=None):
+    if self.displayAtomStruct == VOLUME_PYMOL:
+      return self._showAtomStructPyMol()
 
-  def _showPDBPyMol(self):
-    pdbName = self._getPDBName()
-    outDir = os.path.abspath(self.protocol._getExtraPath(pdbName + '_out'))
-    pymolFile = outDir + '/' + pdbName + '.pml'
+    elif self.displayAtomStruct == VOLUME_VMD:
+      return self._showAtomStructVMD()
 
-    vmdV = PyMolViewer(project=self.getProject())
-    vmdV.visualize(pymolFile, cwd=outDir)
+  def _showAtomStructPyMol(self):
+    pdbName = self._getAtomStructName()
+    outDir = os.path.abspath(self.protocol._getExtraPath(pdbName))
+    pymolFile = outDir + '/' + pdbName.replace('_out', '') + '.pml'
 
-  def _showPDBVMD(self):
-    pdbName = self._getPDBName()
-    outDir = os.path.abspath(self.protocol._getExtraPath(pdbName + '_out'))
-    pwutils.runJob(None, outDir + '/' + pdbName + '_VMD.sh', '', cwd=outDir)
+    pymolV = PyMolViewer(project=self.getProject())
+    pymolV.visualize(pymolFile, cwd=outDir)
 
+  def _showAtomStructVMD(self):
+    outFile = self.getOutputAtomStructFile().split('/')[-1]
+    pdbName, _ = os.path.splitext(outFile)
+    outDir = os.path.abspath(self.protocol._getExtraPath(pdbName))
+    cmd = '{} -e {}'.format(outFile, pdbName.replace('_out', '.tcl'))
+
+    viewer = VmdViewFpocket(cmd, cwd=outDir).show()

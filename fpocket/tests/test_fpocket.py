@@ -26,7 +26,7 @@
 
 from pyworkflow.tests import BaseTest, setupTestProject, DataSet
 from pwem.protocols import ProtImportPdb
-from ..protocols import fpocketFindPockets
+from ..protocols import FpocketFindPockets
 
 class TestFPocket(BaseTest):
     @classmethod
@@ -47,11 +47,11 @@ class TestFPocket(BaseTest):
 
     def _runFPocketFind(self):
         protFPocket = self.newProtocol(
-            fpocketFindPockets,
+            FpocketFindPockets,
             inputAtomStruct=self.protImportPDB.outputPdb)
 
         self.launchProtocol(protFPocket)
-        pdbOut = getattr(protFPocket, 'outputPDB', None)
+        pdbOut = getattr(protFPocket, 'outputAtomStruct', None)
         self.assertIsNotNone(pdbOut)
 
     def test_mutateResidue(self):
