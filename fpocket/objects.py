@@ -35,14 +35,17 @@ from pyworkflow.object import String
 class FpocketPocket(ProteinPocket):
   """ Represent a pocket file from fpocket"""
   def __init__(self, filename=None, proteinFile=None, pqrFile=None, **kwargs):
-    self.properties, self.pocketId = self.parseFile(filename)
-    kwargs.update(self.getKwargs(self.properties, AM))
+    if filename != None:
+      self.properties, self.pocketId = self.parseFile(filename)
+      kwargs.update(self.getKwargs(self.properties, AM))
+
     super().__init__(filename, proteinFile, **kwargs)
     self._pqrFile = String(pqrFile)
-    self.setObjId(self.pocketId)
+    if hasattr(self, 'pocketId'):
+      self.setObjId(self.pocketId)
 
   def __str__(self):
-    s = 'Fpocket pocket {}\nFile: {}'.format(self.pocketId, self.getFileName())
+    s = 'Fpocket pocket {}\nFile: {}'.format(self.getObjId(), self.getFileName())
     return s
 
   def parseFile(self, filename):

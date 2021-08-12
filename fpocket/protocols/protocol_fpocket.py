@@ -27,8 +27,7 @@
 
 
 """
-This protocol is used to perform a residue mutation in a protein structure.
-A energy optimization is performed over the mutated residue and its surroundings.
+This protocol is used to perform a pocket search on a protein structure using the FPocket software
 
 """
 from pyworkflow.protocol import params
@@ -40,6 +39,7 @@ from pwchem.objects import SetOfPockets
 from pwem.objects.data import AtomStruct
 from ..constants import *
 from ..objects import FpocketPocket
+from pwchem.utils import writeSurfPML
 
 class FpocketFindPockets(EMProtocol):
     """
@@ -55,11 +55,6 @@ class FpocketFindPockets(EMProtocol):
                        pointerClass='AtomStruct', allowsNull=False,
                        label="Input atom structure",
                        help='Select the atom structure to be fitted in the volume')
-
-        #Option in fpocket but scipion blocks when specified
-        #form.addParam('interGrids', params.BooleanParam, default=False,
-        #               label='Calculate interaction grids',
-        #               help='Specify this flag if you want fpocket to calculate VdW and Coulomb grids for each pocket')
 
         form.addSection(label='Pocket detection parameters')
         group = form.addGroup('Alpha spheres')
@@ -94,21 +89,19 @@ class FpocketFindPockets(EMProtocol):
 
 
     def _getFpocketArgs(self):
-      args = ['-f', os.path.abspath(self.inpFile)]
-      #if self.interGrids.get():
-      #  args += ['-x']
+        args = ['-f', os.path.abspath(self.inpFile)]
 
-      #Alpha spheres
-      args += ['-m', self.minAlpha.get(), '-M', self.maxAlpha.get(), '-i', self.minNSpheres.get(),
-               '-p', self.ratioApSpheres.get(), '-A', self.minApNeigh.get()]
-      #Clustering
-      args += ['-C', CLUST_TYPES_CODES[self.clustType.get()],
-               '-e', DIST_TYPES_CODES[self.clustDistType.get()],
-               '-D', self.clustDist.get()]
-      #Volume
-      args += ['-v', self.mcIterVol.get()]
+        #Alpha spheres
+        args += ['-m', self.minAlpha.get(), '-M', self.maxAlpha.get(), '-i', self.minNSpheres.get(),
+                 '-p', self.ratioApSpheres.get(), '-A', self.minApNeigh.get()]
+        #Clustering
+        args += ['-C', CLUST_TYPES_CODES[self.clustType.get()],
+                 '-e', DIST_TYPES_CODES[self.clustDistType.get()],
+                 '-D', self.clustDist.get()]
+        #Volume
+        args += ['-v', self.mcIterVol.get()]
 
-      return args
+        return args
 
     # --------------------------- STEPS functions ------------------------------
     def _insertAllSteps(self):
@@ -118,15 +111,15 @@ class FpocketFindPockets(EMProtocol):
         self._insertFunctionStep('createOutputStep')
 
     def convertInputStep(self):
-      #Simply copying the input struct file into current extra file (fpocket will create output there automatically)
-      inpFile = self.inputAtomStruct.get().getFileName()
-      inpName = inpFile.split('/')[-1]
-      self.inpBase, self.ext = os.path.splitext(inpName)
-      if self.ext == '.ent':
-        self.inpFile = self._getExtraPath(self.inpBase+'.pdb')
-      else:
-        self.inpFile = self._getExtraPath(inpName)
-      shutil.copy(inpFile, self.inpFile)
+        #Simply copying the input struct file into current extra file (fpocket will create output there automatically)
+        inpFile = self.getPdbInputStruct()
+        inpName = self.getPdbInputStructName()
+        self.inpBase, self.ext = os.path.splitext(inpName)
+        if self.ext == '.ent':
+          self.inpFile = self._getExtraPath(self.inpBase+'.pdb')
+        else:
+          self.inpFile = self._getExtraPath(inpName)
+        shutil.copy(inpFile, self.inpFile)
 
     def fPocketStep(self):
         Plugin.runFpocket(self, 'fpocket', args=self._getFpocketArgs(), cwd=self._getExtraPath())
@@ -145,6 +138,9 @@ class FpocketFindPockets(EMProtocol):
             pqrFile = os.path.join(pocketsDir, pFile.replace('atm.pdb', 'vert.pqr'))
             pock = FpocketPocket(os.path.join(pocketsDir, pFile), outFile, pqrFile)
             outPockets.append(pock)
+
+        pmlFileName = '{}/{}_surf.pml'.format(self._getExtraPath(self.inpBase+'_out'), self.getPDBName())
+        writeSurfPML(outPockets, pmlFileName)
         self._defineOutputs(outputPockets=outPockets)
 
     # --------------------------- INFO functions -----------------------------------
@@ -157,14 +153,24 @@ class FpocketFindPockets(EMProtocol):
         return methods
 
     def _warnings(self):
-      """ Try to find warnings on define params. """
-      import re
-      warnings = []
-      inpFile = os.path.abspath(self.inputAtomStruct.get().getFileName())
-      with open(inpFile) as f:
-        fileStr = f.read()
-      if re.search('\nHETATM', fileStr):
-        warnings.append('The structure you are inputing has some *heteroatoms* (ligands).\n'
-                        'This will affect the results as its volume is also taken as target.')
+        """ Try to find warnings on define params. """
+        import re
+        warnings = []
+        inpFile = os.path.abspath(self.inputAtomStruct.get().getFileName())
+        with open(inpFile) as f:
+          fileStr = f.read()
+        if re.search('\nHETATM', fileStr):
+          warnings.append('The structure you are inputing has some *heteroatoms* (ligands).\n'
+                          'This will affect the results as its volume is also taken as target.')
 
-      return warnings
+        return warnings
+
+    # --------------------------- UTILS functions -----------------------------------
+    def getPdbInputStruct(self):
+        return self.inputAtomStruct.get().getFileName()
+
+    def getPdbInputStructName(self):
+        return self.getPdbInputStruct().split('/')[-1]
+
+    def getPDBName(self):
+        return self.getPdbInputStructName().split('.')[0]
