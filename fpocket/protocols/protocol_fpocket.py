@@ -135,8 +135,9 @@ class FpocketFindPockets(EMProtocol):
         outPockets = SetOfPockets(filename=self._getExtraPath('pockets.sqlite'))
         for pFile in pocketFiles:
           if '.pdb' in pFile:
-            pqrFile = os.path.join(pocketsDir, pFile.replace('atm.pdb', 'vert.pqr'))
-            pock = FpocketPocket(os.path.join(pocketsDir, pFile), outFile, pqrFile)
+            pFileName = os.path.join(pocketsDir, pFile)
+            pqrFile = pFileName.replace('atm.pdb', 'vert.pqr')
+            pock = FpocketPocket(pFileName, outFile, pqrFile)
             outPockets.append(pock)
 
         pmlFileName = '{}/{}_surf.pml'.format(self._getExtraPath(self.inpBase+'_out'), self.getPDBName())

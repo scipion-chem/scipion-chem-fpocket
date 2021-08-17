@@ -54,7 +54,7 @@ class TestFPocket(BaseTest):
         pdbOut = getattr(protFPocket, 'outputAtomStruct', None)
         self.assertIsNotNone(pdbOut)
 
-    def test_mutateResidue(self):
+    def testFpocket(self):
         self._runFPocketFind()
 
 
