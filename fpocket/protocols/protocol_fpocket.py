@@ -137,7 +137,7 @@ class FpocketFindPockets(EMProtocol):
           if '.pdb' in pFile:
             pFileName = os.path.join(pocketsDir, pFile)
             pqrFile = pFileName.replace('atm.pdb', 'vert.pqr')
-            pock = FpocketPocket(pFileName, outFile, pqrFile)
+            pock = FpocketPocket(pqrFile, outFile, pFileName)
             outPockets.append(pock)
 
         pmlFileName = '{}/{}_surf.pml'.format(self._getExtraPath(self.inpBase+'_out'), self.getPDBName())

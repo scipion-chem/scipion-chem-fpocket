@@ -29,18 +29,16 @@
 from pwchem.objects import ProteinPocket, ProteinAtom, ProteinResidue
 from .constants import ATTRIBUTES_MAPPING as AM
 import numpy as np
-from pyworkflow.object import String
 
 
 class FpocketPocket(ProteinPocket):
   """ Represent a pocket file from fpocket"""
-  def __init__(self, filename=None, proteinFile=None, pqrFile=None, **kwargs):
+  def __init__(self, filename=None, proteinFile=None, propFile=None, **kwargs):
     if filename != None:
-      self.properties, self.pocketId = self.parseFile(filename)
+      self.properties, self.pocketId = self.parseFile(propFile)
       kwargs.update(self.getKwargs(self.properties, AM))
 
-    super().__init__(filename, proteinFile, **kwargs)
-    self._pqrFile = String(pqrFile)
+    super().__init__(filename, proteinFile, propFile, **kwargs)
     if hasattr(self, 'pocketId'):
       self.setObjId(self.pocketId)
 
@@ -76,7 +74,7 @@ class FpocketPocket(ProteinPocket):
 
   def getSpheresRadius(self):
     radius = []
-    with open(str(self._pqrFile)) as f:
+    with open(str(self.getFileName())) as f:
       for line in f:
         if line.startswith('ATOM'):
           radius.append(float(line.split()[-1]))
