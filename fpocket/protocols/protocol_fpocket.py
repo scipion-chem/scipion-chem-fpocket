@@ -39,7 +39,6 @@ from pwchem.objects import SetOfPockets
 from pwem.objects.data import AtomStruct
 from ..constants import *
 from ..objects import FpocketPocket
-from pwchem.utils import writeSurfPML
 
 class FpocketFindPockets(EMProtocol):
     """
@@ -125,10 +124,7 @@ class FpocketFindPockets(EMProtocol):
         Plugin.runFpocket(self, 'fpocket', args=self._getFpocketArgs(), cwd=self._getExtraPath())
 
     def createOutputStep(self):
-        outFile = os.path.abspath(self._getExtraPath('{}/{}'.format(self.inpBase+'_out', self.inpBase+'_out'+self.ext)))
-        outStruct = AtomStruct(outFile)
-        self._defineOutputs(outputAtomStruct=outStruct)
-
+        inAtomStruct = os.path.abspath(self.inputAtomStruct.get().getFileName())
         pocketsDir = os.path.abspath(self._getExtraPath('{}/pockets'.format(self.inpBase+'_out')))
         pocketFiles = os.listdir(pocketsDir)
 
@@ -137,12 +133,14 @@ class FpocketFindPockets(EMProtocol):
           if '.pdb' in pFile:
             pFileName = os.path.join(pocketsDir, pFile)
             pqrFile = pFileName.replace('atm.pdb', 'vert.pqr')
-            pock = FpocketPocket(pqrFile, outFile, pFileName)
+            pock = FpocketPocket(pqrFile, inAtomStruct, pFileName)
             outPockets.append(pock)
-
-        pmlFileName = '{}/{}_surf.pml'.format(self._getExtraPath(self.inpBase+'_out'), self.getPDBName())
-        writeSurfPML(outPockets, pmlFileName)
         self._defineOutputs(outputPockets=outPockets)
+
+        outHETMFile = outPockets.buildPocketsFiles()
+        outStruct = AtomStruct(outHETMFile)
+        self._defineOutputs(outputAtomStruct=outStruct)
+
 
     # --------------------------- INFO functions -----------------------------------
     def _summary(self):
