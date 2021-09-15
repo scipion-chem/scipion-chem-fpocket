@@ -115,9 +115,9 @@ class FpocketFindPockets(EMProtocol):
         inpName = self.getPdbInputStructName()
         self.inpBase, self.ext = os.path.splitext(inpName)
         if self.ext == '.ent':
-          self.inpFile = self._getExtraPath(self.inpBase+'.pdb')
+            self.inpFile = self._getExtraPath(self.inpBase+'.pdb')
         else:
-          self.inpFile = self._getExtraPath(inpName)
+            self.inpFile = self._getExtraPath(inpName)
         shutil.copy(inpFile, self.inpFile)
 
     def fPocketStep(self):
@@ -130,15 +130,16 @@ class FpocketFindPockets(EMProtocol):
 
         outPockets = SetOfPockets(filename=self._getExtraPath('pockets.sqlite'))
         for pFile in pocketFiles:
-          if '.pdb' in pFile:
-            pFileName = os.path.join(pocketsDir, pFile)
-            pqrFile = pFileName.replace('atm.pdb', 'vert.pqr')
-            pock = FpocketPocket(pqrFile, inAtomStruct, pFileName)
-            outPockets.append(pock)
-        self._defineOutputs(outputPockets=outPockets)
+            if '.pdb' in pFile:
+                pFileName = os.path.join(pocketsDir, pFile)
+                pqrFile = pFileName.replace('atm.pdb', 'vert.pqr')
+                pock = FpocketPocket(pqrFile, inAtomStruct, pFileName)
+                outPockets.append(pock)
 
         outHETMFile = outPockets.buildPocketsFiles()
         outStruct = AtomStruct(outHETMFile)
+
+        self._defineOutputs(outputPockets=outPockets)
         self._defineOutputs(outputAtomStruct=outStruct)
 
 
