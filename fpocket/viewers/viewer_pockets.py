@@ -29,20 +29,10 @@ from ..protocols import FpocketFindPockets
 import pyworkflow.protocol.params as params
 import pyworkflow.viewer as pwviewer
 from pwchem.viewers import PyMolViewer, PocketPointsViewer, ContactSurfaceViewer
-from pwem.viewers import Vmd, VmdView
-
-from subprocess import Popen
+from pwchem.viewers import VmdViewFpocket
 
 
 VOLUME_VMD, VOLUME_PYMOL, VOLUME_PYMOL_SURF = 0, 1, 2
-
-class VmdViewFpocket(VmdView):
-  def __init__(self, vmdArgs, **kwargs):
-    pwviewer.CommandView.__init__(self, ['vmd', *vmdArgs.split()],
-                                  env=Vmd.getEnviron(), **kwargs)
-
-  def show(self):
-    Popen(self._cmd, cwd=self._cwd, env=Vmd.getEnviron())
 
 class viewerFPocket(pwviewer.ProtocolViewer):
   _label = 'Viewer pockets'

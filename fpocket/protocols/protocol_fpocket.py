@@ -39,7 +39,6 @@ from pwchem.objects import SetOfPockets
 from pwem.objects.data import AtomStruct
 from ..constants import *
 from ..objects import FpocketPocket
-from pwchem.utils import writeSurfPML
 
 class FpocketFindPockets(EMProtocol):
     """
@@ -116,33 +115,33 @@ class FpocketFindPockets(EMProtocol):
         inpName = self.getPdbInputStructName()
         self.inpBase, self.ext = os.path.splitext(inpName)
         if self.ext == '.ent':
-          self.inpFile = self._getExtraPath(self.inpBase+'.pdb')
+            self.inpFile = self._getExtraPath(self.inpBase+'.pdb')
         else:
-          self.inpFile = self._getExtraPath(inpName)
+            self.inpFile = self._getExtraPath(inpName)
         shutil.copy(inpFile, self.inpFile)
 
     def fPocketStep(self):
         Plugin.runFpocket(self, 'fpocket', args=self._getFpocketArgs(), cwd=self._getExtraPath())
 
     def createOutputStep(self):
-        outFile = os.path.abspath(self._getExtraPath('{}/{}'.format(self.inpBase+'_out', self.inpBase+'_out'+self.ext)))
-        outStruct = AtomStruct(outFile)
-        self._defineOutputs(outputAtomStruct=outStruct)
-
+        inAtomStruct = os.path.abspath(self.inputAtomStruct.get().getFileName())
         pocketsDir = os.path.abspath(self._getExtraPath('{}/pockets'.format(self.inpBase+'_out')))
         pocketFiles = os.listdir(pocketsDir)
 
         outPockets = SetOfPockets(filename=self._getExtraPath('pockets.sqlite'))
         for pFile in pocketFiles:
-          if '.pdb' in pFile:
-            pFileName = os.path.join(pocketsDir, pFile)
-            pqrFile = pFileName.replace('atm.pdb', 'vert.pqr')
-            pock = FpocketPocket(pFileName, outFile, pqrFile)
-            outPockets.append(pock)
+            if '.pdb' in pFile:
+                pFileName = os.path.join(pocketsDir, pFile)
+                pqrFile = pFileName.replace('atm.pdb', 'vert.pqr')
+                pock = FpocketPocket(pqrFile, inAtomStruct, pFileName)
+                outPockets.append(pock)
 
-        pmlFileName = '{}/{}_surf.pml'.format(self._getExtraPath(self.inpBase+'_out'), self.getPDBName())
-        writeSurfPML(outPockets, pmlFileName)
+        outHETMFile = outPockets.buildPocketsFiles()
+        outStruct = AtomStruct(outHETMFile)
+
         self._defineOutputs(outputPockets=outPockets)
+        self._defineOutputs(outputAtomStruct=outStruct)
+
 
     # --------------------------- INFO functions -----------------------------------
     def _summary(self):
