@@ -36,6 +36,7 @@ from pyworkflow.utils import Message
 import os, shutil
 from fpocket import Plugin
 from pwchem.objects import SetOfPockets
+from pwchem.utils import runOpenBabel, clean_PDB
 from pwem.objects.data import AtomStruct
 from ..constants import *
 from ..objects import FpocketPocket
@@ -116,15 +117,18 @@ class FpocketFindPockets(EMProtocol):
         self.inpBase, self.ext = os.path.splitext(inpName)
         if self.ext == '.ent':
             self.inpFile = self._getExtraPath(self.inpBase+'.pdb')
+            shutil.copy(inpFile, self.inpFile)
+        elif self.ext == '.cif':
+            self.inpFile = self._getExtraPath(self.inpBase + '.pdb')
+            clean_PDB(inpFile, self.inpFile)
         else:
             self.inpFile = self._getExtraPath(inpName)
-        shutil.copy(inpFile, self.inpFile)
+            shutil.copy(inpFile, self.inpFile)
 
     def fPocketStep(self):
         Plugin.runFpocket(self, 'fpocket', args=self._getFpocketArgs(), cwd=self._getExtraPath())
 
     def createOutputStep(self):
-        inAtomStruct = os.path.abspath(self.inputAtomStruct.get().getFileName())
         pocketsDir = os.path.abspath(self._getExtraPath('{}/pockets'.format(self.inpBase+'_out')))
         pocketFiles = os.listdir(pocketsDir)
 
@@ -133,7 +137,7 @@ class FpocketFindPockets(EMProtocol):
             if '.pdb' in pFile:
                 pFileName = os.path.join(pocketsDir, pFile)
                 pqrFile = pFileName.replace('atm.pdb', 'vert.pqr')
-                pock = FpocketPocket(pqrFile, inAtomStruct, pFileName)
+                pock = FpocketPocket(pqrFile, self.inpFile, pFileName)
                 outPockets.append(pock)
 
         outHETMFile = outPockets.buildPocketsFiles()
