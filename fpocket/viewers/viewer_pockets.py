@@ -49,8 +49,13 @@ class viewerFPocket(pwviewer.ProtocolViewer):
                   display=params.EnumParam.DISPLAY_HLIST,
                   label='Display output AtomStruct with',
                   help='*PyMol*: display AtomStruct and pockets as points / surface.\n '
-                       '*VMD*: display AtomStruct and movies with VMD.'
-                  )
+                       '*VMD*: display AtomStruct and movies with VMD.')
+    form.addParam('displayBBoxes', params.BooleanParam, condition='displayAtomStruct!={}'.format(VOLUME_VMD),
+                  default=False, label='Display pocket bounding boxes',
+                  help='Display the bounding boxes in pymol to check the size for the localized docking')
+    form.addParam('pocketRadiusN', params.FloatParam, label='Grid radius vs pocket radius: ',
+                  default=1.1, condition='displayBBoxes and displayAtomStruct!={}'.format(VOLUME_VMD),
+                  help='The radius * n of each pocket will be used as grid radius')
 
   def _getVisualizeDict(self):
     return {
@@ -78,12 +83,20 @@ class viewerFPocket(pwviewer.ProtocolViewer):
       return self._showAtomStructVMD()
 
   def _showAtomStructPyMol(self):
+    bBox = self.displayBBoxes.get()
+    if bBox:
+      bBox = self.pocketRadiusN.get()
+
     pymolV = PocketPointsViewer(project=self.getProject())
-    pymolV._visualize(self.protocol.outputPockets)
+    pymolV._visualize(self.protocol.outputPockets, bBox=bBox)
 
   def _showAtomStructPyMolSurf(self):
+    bBox = self.displayBBoxes.get()
+    if bBox:
+      bBox = self.pocketRadiusN.get()
+
     pymolV = ContactSurfaceViewer(project=self.getProject())
-    pymolV._visualize(self.protocol.outputPockets)
+    pymolV._visualize(self.protocol.outputPockets, bBox=bBox)
 
   def _showAtomStructVMD(self):
     oPockets = self.protocol.outputPockets
