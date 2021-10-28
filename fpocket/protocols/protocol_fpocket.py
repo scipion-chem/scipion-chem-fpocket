@@ -140,7 +140,7 @@ class FpocketFindPockets(EMProtocol):
                 pock = FpocketPocket(pqrFile, self.inpFile, pFileName)
                 outPockets.append(pock)
 
-        outHETMFile = outPockets.buildPocketsFiles()
+        outHETMFile = outPockets.buildPDBhetatmFile()
         outStruct = AtomStruct(outHETMFile)
 
         self._defineOutputs(outputPockets=outPockets)

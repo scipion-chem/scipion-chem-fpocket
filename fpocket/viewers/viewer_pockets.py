@@ -86,9 +86,11 @@ class viewerFPocket(pwviewer.ProtocolViewer):
     pymolV._visualize(self.protocol.outputPockets)
 
   def _showAtomStructVMD(self):
+    oPockets = self.protocol.outputPockets
+    tclFile = oPockets.createTCL()
     outFile = self.getOutputAtomStructFile().split('/')[-1]
     pdbName, _ = os.path.splitext(outFile)
     outDir = os.path.abspath(self.protocol._getExtraPath(pdbName))
-    cmd = '{} -e {}'.format(outFile, pdbName.replace('_out', '.tcl'))
+    cmd = '{} -e {}'.format(outFile, tclFile)
 
     viewer = VmdViewFpocket(cmd, cwd=outDir).show()
