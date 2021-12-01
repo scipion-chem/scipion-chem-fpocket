@@ -27,40 +27,27 @@ import os
 
 from ..protocols import FpocketFindPockets
 import pyworkflow.protocol.params as params
-import pyworkflow.viewer as pwviewer
-from pwchem.viewers import PyMolViewer, PocketPointsViewer, ContactSurfaceViewer
+from pwchem.viewers import ViewerGeneralPockets
 from pwchem.viewers import VmdViewFpocket
 
-
-VOLUME_VMD, VOLUME_PYMOL, VOLUME_PYMOL_SURF = 0, 1, 2
-
-class viewerFPocket(pwviewer.ProtocolViewer):
-  _label = 'Viewer pockets'
+class viewerFPocket(ViewerGeneralPockets):
+  _label = 'Viewer pockets FPocket'
   _targets = [FpocketFindPockets]
 
   def __init__(self, **kwargs):
-    pwviewer.ProtocolViewer.__init__(self, **kwargs)
+    super().__init__(**kwargs)
 
   def _defineParams(self, form):
-    form.addSection(label='Visualization of predicted pockets')
-    form.addParam('displayAtomStruct', params.EnumParam,
-                  choices=['VMD', 'PyMol (Pocket Points)', 'PyMol (Contact Surface)'],
-                  default=VOLUME_VMD,
-                  display=params.EnumParam.DISPLAY_HLIST,
-                  label='Display output AtomStruct with',
-                  help='*PyMol*: display AtomStruct and pockets as points / surface.\n '
-                       '*VMD*: display AtomStruct and movies with VMD.')
-    form.addParam('displayBBoxes', params.BooleanParam, condition='displayAtomStruct!={}'.format(VOLUME_VMD),
-                  default=False, label='Display pocket bounding boxes',
-                  help='Display the bounding boxes in pymol to check the size for the localized docking')
-    form.addParam('pocketRadiusN', params.FloatParam, label='Grid radius vs pocket radius: ',
-                  default=1.1, condition='displayBBoxes and displayAtomStruct!={}'.format(VOLUME_VMD),
-                  help='The radius * n of each pocket will be used as grid radius')
+    super()._defineParams(form)
+    form.addSection(label='VMD visualization')
+    form.addParam('displayVMD', params.LabelParam,
+                  label='Display output Pockets with VMD: ',
+                  help='*VMD*: display output Pockets and movies with VMD.')
 
   def _getVisualizeDict(self):
-    return {
-      'displayAtomStruct': self._showAtomStruct,
-    }
+    dispDic = super()._getVisualizeDict()
+    dispDic.update({'displayVMD': self._showAtomStructVMD})
+    return dispDic
 
   def _validate(self):
     return []
@@ -72,33 +59,7 @@ class viewerFPocket(pwviewer.ProtocolViewer):
   def getOutputAtomStructFile(self):
     return os.path.abspath(self.protocol.outputAtomStruct.getFileName())
 
-  def _showAtomStruct(self, paramName=None):
-    if self.displayAtomStruct == VOLUME_PYMOL:
-      return self._showAtomStructPyMol()
-
-    elif self.displayAtomStruct == VOLUME_PYMOL_SURF:
-      return self._showAtomStructPyMolSurf()
-
-    elif self.displayAtomStruct == VOLUME_VMD:
-      return self._showAtomStructVMD()
-
-  def _showAtomStructPyMol(self):
-    bBox = self.displayBBoxes.get()
-    if bBox:
-      bBox = self.pocketRadiusN.get()
-
-    pymolV = PocketPointsViewer(project=self.getProject())
-    pymolV._visualize(self.protocol.outputPockets, bBox=bBox)
-
-  def _showAtomStructPyMolSurf(self):
-    bBox = self.displayBBoxes.get()
-    if bBox:
-      bBox = self.pocketRadiusN.get()
-
-    pymolV = ContactSurfaceViewer(project=self.getProject())
-    pymolV._visualize(self.protocol.outputPockets, bBox=bBox)
-
-  def _showAtomStructVMD(self):
+  def _showAtomStructVMD(self, paramName=None):
     oPockets = self.protocol.outputPockets
     tclFile = oPockets.createTCL()
     outFile = self.getOutputAtomStructFile().split('/')[-1]
