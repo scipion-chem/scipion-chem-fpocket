@@ -54,7 +54,7 @@ class FpocketFindPockets(EMProtocol):
         form.addParam('inputAtomStruct', params.PointerParam,
                        pointerClass='AtomStruct', allowsNull=False,
                        label="Input atom structure",
-                       help='Select the atom structure to be fitted in the volume')
+                       help='Select the atom structure to search for pockets')
 
         form.addSection(label='Pocket detection parameters')
         group = form.addGroup('Alpha spheres')
