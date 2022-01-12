@@ -30,22 +30,26 @@
 This protocol is used to perform a pocket search on a protein structure using the FPocket software
 
 """
-from pyworkflow.protocol import params
-from pwem.protocols import EMProtocol
-from pyworkflow.utils import Message
+
 import os, shutil
+
+from pyworkflow.protocol import params
+from pyworkflow.utils import Message
+from pwem.protocols import EMProtocol
+
+from pwchem.objects import SetOfPockets, PredictPocketsOutput
+from pwchem.utils import clean_PDB
+
 from fpocket import Plugin
-from pwchem.objects import SetOfPockets
-from pwchem.utils import runOpenBabel, clean_PDB
-from pwem.objects.data import AtomStruct
-from ..constants import *
-from ..objects import FpocketPocket
+from fpocket.constants import *
+from fpocket.objects import FpocketPocket
 
 class FpocketFindPockets(EMProtocol):
     """
     Executes the fpocket software to look for protein pockets.
     """
     _label = 'Find pockets'
+    _possibleOutputs = PredictPocketsOutput
 
     # -------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
@@ -141,7 +145,7 @@ class FpocketFindPockets(EMProtocol):
                 outPockets.append(pock)
 
         outHETMFile = outPockets.buildPDBhetatmFile()
-        self._defineOutputs(outputPockets=outPockets)
+        self._defineOutputs(**{self._possibleOutputs.outputPockets.name: outPockets})
 
 
     # --------------------------- INFO functions -----------------------------------
