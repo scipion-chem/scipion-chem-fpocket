@@ -67,4 +67,4 @@ class viewerFPocket(ViewerGeneralPockets):
     outDir = os.path.abspath(self.protocol._getExtraPath(pdbName))
     cmd = '{} -e {}'.format(outFile, tclFile)
 
-    viewer = VmdViewFpocket(cmd, cwd=outDir).show()
+    return [VmdViewFpocket(cmd, cwd=outDir)]
