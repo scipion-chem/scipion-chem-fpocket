@@ -35,6 +35,7 @@ import os, shutil
 
 from pyworkflow.protocol import params
 from pyworkflow.utils import Message
+from pyworkflow.object import String
 from pwem.protocols import EMProtocol
 
 from pwchem.objects import SetOfPockets, PredictPocketsOutput
@@ -116,6 +117,7 @@ class FpocketFindPockets(EMProtocol):
 
     def convertInputStep(self):
         #Simply copying the input struct file into current extra file (fpocket will create output there automatically)
+        inpStruct = self.inputAtomStruct.get()
         inpFile = self.getPdbInputStruct()
         inpName = self.getPdbInputStructName()
         self.inpBase, self.ext = os.path.splitext(inpName)
@@ -125,6 +127,9 @@ class FpocketFindPockets(EMProtocol):
         elif self.ext == '.cif':
             self.inpFile = self._getExtraPath(self.inpBase + '.pdb')
             clean_PDB(inpFile, self.inpFile)
+        elif str(type(inpStruct).__name__) == 'SchrodingerAtomStruct':
+            self.inpFile = self._getExtraPath(os.path.basename(inpFile).replace(inpStruct.getExtension(), '.pdb'))
+            inpStruct.convert2PDB(outPDB=self.inpFile)
         else:
             self.inpFile = self._getExtraPath(inpName)
             shutil.copy(inpFile, self.inpFile)
@@ -136,12 +141,15 @@ class FpocketFindPockets(EMProtocol):
         pocketsDir = os.path.abspath(self._getExtraPath('{}/pockets'.format(self.inpBase+'_out')))
         pocketFiles = os.listdir(pocketsDir)
 
+        inpStruct = self.inputAtomStruct.get()
         outPockets = SetOfPockets(filename=self._getExtraPath('pockets.sqlite'))
         for pFile in pocketFiles:
             if '.pdb' in pFile:
                 pFileName = os.path.join(pocketsDir, pFile)
                 pqrFile = pFileName.replace('atm.pdb', 'vert.pqr')
                 pock = FpocketPocket(pqrFile, self.inpFile, pFileName)
+                if str(type(inpStruct).__name__) == 'SchrodingerAtomStruct':
+                  pock._maeFile = String(os.path.abspath(inpStruct.getFileName()))
                 outPockets.append(pock)
 
         outHETMFile = outPockets.buildPDBhetatmFile()
@@ -161,7 +169,10 @@ class FpocketFindPockets(EMProtocol):
         """ Try to find warnings on define params. """
         import re
         warnings = []
-        inpFile = os.path.abspath(self.inputAtomStruct.get().getFileName())
+        inpStruct = self.inputAtomStruct.get()
+        inpFile = os.path.abspath(inpStruct.getFileName())
+        if str(type(inpStruct).__name__) == 'SchrodingerAtomStruct':
+          inpFile = inpStruct.convert2PDB()
         with open(inpFile) as f:
           fileStr = f.read()
         if re.search('\nHETATM', fileStr):
