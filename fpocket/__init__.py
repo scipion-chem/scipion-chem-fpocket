@@ -49,7 +49,7 @@ class Plugin(pwem.Plugin):
     def defineBinaries(cls, env):
         installationCmd = ''
         print('Installing with conda')
-        installationCmd += 'conda install -c conda-forge fpocket -p {} && '.format(cls._pluginHome)
+        installationCmd += 'conda install -y -c conda-forge fpocket -p {} && '.format(cls._pluginHome)
 
         # Creating validation file
         FPOCKET_INSTALLED = '%s_installed' % FPOCKET
