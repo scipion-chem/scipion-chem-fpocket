@@ -56,15 +56,13 @@ class viewerFPocket(ViewerGeneralPockets):
   # ShowAtomStructs
   # =========================================================================
 
-  def getOutputAtomStructFile(self):
-    return os.path.abspath(self.protocol.outputAtomStruct.getFileName())
-
   def _showAtomStructVMD(self, paramName=None):
     oPockets = self.protocol.outputPockets
     tclFile = oPockets.createTCL()
-    outFile = self.getOutputAtomStructFile().split('/')[-1]
+    outFile = oPockets.getProteinFile().split('/')[-1]
     pdbName, _ = os.path.splitext(outFile)
-    outDir = os.path.abspath(self.protocol._getExtraPath(pdbName))
+    outDir = os.path.abspath(self.protocol._getExtraPath(pdbName + '_out'))
     cmd = '{} -e {}'.format(outFile, tclFile)
 
     return [VmdViewFpocket(cmd, cwd=outDir)]
+
