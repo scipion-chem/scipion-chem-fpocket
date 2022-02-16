@@ -28,7 +28,7 @@ import os
 from ..protocols import FpocketFindPockets
 import pyworkflow.protocol.params as params
 from pwchem.viewers import ViewerGeneralPockets
-from pwchem.viewers import VmdViewFpocket
+from pwchem.viewers import VmdViewPopen
 
 class viewerFPocket(ViewerGeneralPockets):
   _label = 'Viewer pockets FPocket'
@@ -64,5 +64,5 @@ class viewerFPocket(ViewerGeneralPockets):
     outDir = os.path.abspath(self.protocol._getExtraPath(pdbName + '_out'))
     cmd = '{} -e {}'.format(outFile, tclFile)
 
-    return [VmdViewFpocket(cmd, cwd=outDir)]
+    return [VmdViewPopen(cmd, cwd=outDir)]
 
