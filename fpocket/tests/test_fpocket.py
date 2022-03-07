@@ -51,7 +51,7 @@ class TestFPocket(BaseTest):
             inputAtomStruct=self.protImportPDB.outputPdb)
 
         self.launchProtocol(protFPocket)
-        pdbOut = getattr(protFPocket, 'outputAtomStruct', None)
+        pdbOut = getattr(protFPocket, 'outputPockets', None)
         self.assertIsNotNone(pdbOut)
 
     def testFpocket(self):

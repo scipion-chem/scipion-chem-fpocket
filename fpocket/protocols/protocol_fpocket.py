@@ -38,12 +38,11 @@ from pyworkflow.utils import Message
 from pyworkflow.object import String
 from pwem.protocols import EMProtocol
 
-from pwchem.objects import SetOfPockets, PredictPocketsOutput
+from pwchem.objects import SetOfPockets, PredictPocketsOutput, ProteinPocket
 from pwchem.utils import clean_PDB
 
 from fpocket import Plugin
 from fpocket.constants import *
-from fpocket.objects import FpocketPocket
 
 class FpocketFindPockets(EMProtocol):
     """
@@ -147,7 +146,7 @@ class FpocketFindPockets(EMProtocol):
             if '.pdb' in pFile:
                 pFileName = os.path.join(pocketsDir, pFile)
                 pqrFile = pFileName.replace('atm.pdb', 'vert.pqr')
-                pock = FpocketPocket(pqrFile, self.inpFile, pFileName)
+                pock = ProteinPocket(pqrFile, self.inpFile, pFileName, pClass='FPocket')
                 if str(type(inpStruct).__name__) == 'SchrodingerAtomStruct':
                   pock._maeFile = String(os.path.abspath(inpStruct.getFileName()))
                 outPockets.append(pock)
