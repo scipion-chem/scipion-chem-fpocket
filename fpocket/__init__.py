@@ -25,7 +25,7 @@
 # **************************************************************************
 
 import pwem
-from os.path import join, exists
+from os.path import join, exists, abspath
 from .constants import *
 
 _version_ = '0.1'
@@ -49,7 +49,7 @@ class Plugin(pwem.Plugin):
     def defineBinaries(cls, env):
         installationCmd = ''
         print('Installing with conda')
-        installationCmd += 'conda install -y -c conda-forge fpocket -p {} && '.format(cls._pluginHome)
+        installationCmd += 'git clone https://github.com/Discngine/fpocket.git {} && cd {} && make && '.format(cls._pluginHome, cls._pluginHome)
 
         # Creating validation file
         FPOCKET_INSTALLED = '%s_installed' % FPOCKET
@@ -65,8 +65,26 @@ class Plugin(pwem.Plugin):
     @classmethod
     def runFpocket(cls, protocol, program, args, cwd=None):
         """ Run Fpocket command from a given protocol. """
-        print(protocol)
         protocol.runJob(join(cls._pluginHome, 'bin/{}'.format(program)), args, cwd=cwd)
+
+    @classmethod
+    def runMDpocket(cls, protocol, program, args, cwd=None):
+        """ Run MDpocket command from a given protocol. """
+        chg = 'mkdir {}/run_{} && cd {}/run_{} && {}'.\
+            format(join(cls._pluginHome, 'bin'), protocol.getObjId(), join(cls._pluginHome, 'bin'), protocol.getObjId(),
+                   program)
+        print(args)
+        protocol.runJob(chg, args, cwd=cwd)
+        cmd = 'cd {}/run_{} && mv ./* {} && rm -r {}/run_{}'.format(join(cls._pluginHome, 'bin'), protocol.getObjId(),
+                                                                    abspath(cwd),
+                                                                    join(cls._pluginHome, 'bin'), protocol.getObjId())
+
+        protocol.runJob(cmd, '', cwd=cwd)
+
+    # @classmethod
+    # def runSelIsovalue(cls, protocol, program, args, cwd=None):
+    #     cmd = 'python path/{}'.format(program)
+    #     protocol.runJob(cmd, args, cwd=cwd)
 
     @classmethod  #  Test that
     def getEnviron(cls):

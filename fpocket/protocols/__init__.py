@@ -5,4 +5,5 @@
 # **************************************************************************
 
 from .protocol_fpocket import FpocketFindPockets
+from .protocol_mdpocket import MDpocketAnalyze
 
