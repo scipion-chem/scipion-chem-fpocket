@@ -81,10 +81,10 @@ class Plugin(pwem.Plugin):
 
         protocol.runJob(cmd, '', cwd=cwd)
 
-    # @classmethod
-    # def runSelIsovalue(cls, protocol, program, args, cwd=None):
-    #     cmd = 'python path/{}'.format(program)
-    #     protocol.runJob(cmd, args, cwd=cwd)
+    @classmethod
+    def runSelIsovalue(cls, protocol, program, args, cwd=None):
+        cmd = 'python {}/{}'.format(join(cls._pluginHome, 'scripts'), program)
+        protocol.runJob(cmd, args, cwd=cwd)
 
     @classmethod  #  Test that
     def getEnviron(cls):
