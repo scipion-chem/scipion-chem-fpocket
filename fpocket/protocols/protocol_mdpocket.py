@@ -2,7 +2,7 @@
 # **************************************************************************
 # *
 # * Authors: Daniel Del Hoyo (ddelhoyo@cnb.csic.es)
-# *
+# *          Lobna Ramadane Morchadi (lobna.ramadane@alumnos.upm.es)
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
@@ -58,15 +58,17 @@ class MDpocketAnalyze(EMProtocol):
                        pointerClass='GromacsSystem', allowsNull=False,
                        label="Input atomic system: ",
                        help='Select the atom structure to search for pockets')
+
+        form.addSection(label='Pocket analysis parameters')
         group = form.addGroup('Features')
         group.addParam('doGenerateReferences', params.BooleanParam, default=False,
                        label='Druggable Pockets',
-                       help='If *No*, default parameters to select all pockets'
+                       help='If *No*, default parameters to select all pockets \t'
                             'If *Yes*, to score pockets by druggability'
                             'Identification of pockets most likely to bind drug like molecules'
                        )
 
-        group.addParam('isoValue', params.FloatParam, default=0.0,
+        group.addParam('isoValue', params.FloatParam, default=1.0,
                        label='Selected Isovalue',
                        help='Selected Isovalue Threshold in Pocket Analysis for PDB output')
 
@@ -88,31 +90,31 @@ class MDpocketAnalyze(EMProtocol):
 
         return args
 
-    # def _getselIsovalueArgs(self):
-    # # python extractISOPdb.py path / my_dx_file.dx outputname.pdb isovalue
-    #
-    #     volFile = os.path.abspath(cwd)
-    #     args = [volFile]
-    #
-    #     outputName = 'mdpoutput-{}.pdb'.format(str(self.isoValue.get()))
-    #     args += [outputName]
-    #
-    #     isoValue = str(self.isoValue.get())
-    #     args += [isoValue]
-    #
-    #     return args
+    def _getselIsovalueArgs(self):
+    # python extractISOPdb.py path / my_dx_file.dx outputname.pdb isovalue
+
+        volFile = os.path.abspath(self._getExtraPath("mdpout_dens_grid.dx")) #To get the extra path between home path and protocol
+        args = [volFile]
+
+        outputName = 'mdpoutput-{}.pdb'.format(str(self.isoValue.get()))
+        args += [outputName]
+
+        isoValue = self.isoValue.get()
+        args += [isoValue]
+
+        return args
     #
     # --------------------------- STEPS functions ------------------------------
     def _insertAllSteps(self):
         # Insert processing steps
         self._insertFunctionStep('mdPocketStep')
         self._insertFunctionStep('createOutputStep')
-        #self._insertFunctionStep('selIsovalue')
+        self._insertFunctionStep('selIsovalue')
     def mdPocketStep(self):
         Plugin.runMDpocket(self, 'mdpocket', args=self._getMDpocketArgs(), cwd=self._getExtraPath())
 
-    # def selIsovalue(self):
-    #     Plugin.runSelIsovalue(self, 'extractISOPdb.py', args=self._getselIsovalueArgs(), cwd=self._getExtraPath())
+    def selIsovalue(self):
+        Plugin.runSelIsovalue(self, 'extractISOPdb.py', args=self._getselIsovalueArgs(), cwd=self._getExtraPath())
 
     def createOutputStep(self):
         pass
