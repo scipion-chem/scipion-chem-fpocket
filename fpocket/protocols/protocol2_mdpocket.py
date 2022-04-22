@@ -32,6 +32,7 @@ This protocol is used to perform a pocket search on a protein structure using th
 """
 
 import os, shutil
+import glob
 
 from pyworkflow.protocol import params
 from pyworkflow.utils import Message
@@ -44,7 +45,7 @@ from pwchem.utils import clean_PDB
 from fpocket import Plugin
 from fpocket.constants import *
 
-class MDpocketAnalyze(EMProtocol):
+class MDpocketCharacterize(EMProtocol):
     """
     Executes the mdpocket software to look for protein pockets.
     """
@@ -60,22 +61,24 @@ class MDpocketAnalyze(EMProtocol):
                        help='Select the atom structure to search for pockets')
 
         form.addParam('selectedPocket', params.PointerParam,
-                      pointerClass='GromacsSystem', allowsNull=False,
-                      label="Input atomic system: ",
-                      help='Select the atom structure to search for pockets')
+                      pointerClass='SetOfPockets', allowsNull=False,
+                      label="Set of pockets obtained from trajectory ",
+                      help='Characterization of pockets obtained in MD trajectory')
 
-    def _getMDpocketArgs(self):
-        trajFile = os.path.abspath(self.inputSystem.get().getTrajectoryFile())
-        args = ['--trajectory_file', trajFile]
+    def _getMDpocketArgs(self, selPocket):
+        trajFile = self.inputSystem.get().getTrajectoryFile()
+        trajBasename = os.path.basename(trajFile)
+        args = ['--trajectory_file', trajBasename]
 
         trajExt = os.path.splitext(trajFile)[1][1:]
         args += ['--trajectory_format', trajExt]
 
-        selPocket = os.path.abspath(self.inputSystem.get().getSystemFile())
-        args += ['--selected_pocket', selPocket]
+        pdbFile = self.inputSystem.get().getSystemFile()
+        pdbBasename = os.path.basename(pdbFile)
+        args += ['-f', pdbBasename]
 
-        pdbFile = os.path.abspath(self.inputSystem.get().getSystemFile())
-        args += ['-f', pdbFile]
+        # selPocket = os.path.abspath(self.selectedPocket.get()._getExtraPath("pocketFile_1.pdb")
+        args += ['--selected_pocket', selPocket]
 
         return args
 
@@ -86,7 +89,16 @@ class MDpocketAnalyze(EMProtocol):
         self._insertFunctionStep('createOutputStep')
 
     def mdPocketStep(self):
-        Plugin.runMDpocket(self, 'mdpocket', args=self._getMDpocketArgs(), cwd=self._getExtraPath())
+
+        for selPocket in (self.selectedPocket.get()):
+            trajFile = os.path.abspath(self.inputSystem.get().getTrajectoryFile())
+            pdbFile = os.path.abspath(self.inputSystem.get().getSystemFile())
+            pocketFile = selPocket.getFileName()
+            dir = os.path.abspath(self._getExtraPath('pocketFolder_{}'.format(selPocket.getObjId())))
+            os.mkdir(dir)
+            os.system('cd {} && cp {} {} {} ./'.format(dir, trajFile, pdbFile, os.path.abspath(pocketFile)))
+            Plugin.runMDpocket_2(self, 'mdpocket', args=self._getMDpocketArgs(os.path.basename(pocketFile)), cwd=dir)
+            os.system('rm {} {} {} ./'.format(trajFile, pdbFile, os.path.abspath(pocketFile)))
 
     def createOutputStep(self):
         pass
