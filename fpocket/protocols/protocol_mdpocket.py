@@ -37,10 +37,10 @@ from pyworkflow.protocol import params
 from pyworkflow.utils import Message
 from pyworkflow.object import String
 from pwem.protocols import EMProtocol
+#from pwem.protocols import protocol_define_manual_pockets
 
 from pwchem.objects import SetOfPockets, PredictPocketsOutput, ProteinPocket
-from pwchem.utils import clean_PDB
-
+from pwchem.utils import *
 from fpocket import Plugin
 from fpocket.constants import *
 
@@ -63,14 +63,17 @@ class MDpocketAnalyze(EMProtocol):
         group = form.addGroup('Features')
         group.addParam('doGenerateReferences', params.BooleanParam, default=False,
                        label='Druggable Pockets',
-                       help='If *No*, default parameters to select all pockets \t'
-                            'If *Yes*, to score pockets by druggability'
+                       help='If *No*, default parameters to select all pockets\n'
+                            'If *Yes*, to score pockets by druggability\n'
                             'Identification of pockets most likely to bind drug like molecules'
                        )
 
         group.addParam('isoValue', params.FloatParam, default=1.0,
                        label='Selected Isovalue',
                        help='Selected Isovalue Threshold in Pocket Analysis for PDB output')
+        group.addParam('maxIntraDistance', params.FloatParam, default='2.0',
+                       label='Maximum distance between pocket points (A): ',
+                       help='Maximum distance between two pocket atoms to considered them same pocket')
 
     def _getMDpocketArgs(self):
         trajFile = os.path.abspath(self.inputSystem.get().getTrajectoryFile())
@@ -101,8 +104,13 @@ class MDpocketAnalyze(EMProtocol):
 
         isoValue = self.isoValue.get()
         args += [isoValue]
-
         return args
+
+    def _clusterizedPocketsArgs(self):
+        inpPdb = os.path.abspath(self._getExtraPath("mdpout_dens_iso_8.dx"))
+        inpPdb += [inpPdb]
+        return args
+
     #
     # --------------------------- STEPS functions ------------------------------
     def _insertAllSteps(self):
@@ -110,11 +118,33 @@ class MDpocketAnalyze(EMProtocol):
         self._insertFunctionStep('mdPocketStep')
         self._insertFunctionStep('createOutputStep')
         self._insertFunctionStep('selIsovalue')
+        self._insertFunctionStep('defineOutputStep')
     def mdPocketStep(self):
         Plugin.runMDpocket(self, 'mdpocket', args=self._getMDpocketArgs(), cwd=self._getExtraPath())
 
     def selIsovalue(self):
         Plugin.runSelIsovalue(self, 'extractISOPdb.py', args=self._getselIsovalueArgs(), cwd=self._getExtraPath())
+
+    def defineOutputStep(self):
+        # inpStruct = self.inpPdb.get()
+        # coords = self.getCoords()
+        # self.coordsClusters = clusterCoords(coords, self.maxIntraDistance.get()) ESTO SE SUPONE
+        #QUE ESTA EN LA FUNCIÓN DE ENCIMA PERO NSPQ NO FUNCIONA...
+        coords = self.getCoords()
+        self.coordsClusters = clusterCoords(coords, self.maxIntraDistance.get())
+
+        outPockets = SetOfPockets(filename=self._getPath('pockets.sqlite'))
+        for i, clust in enumerate(self.coordsClusters):
+            pocketFile = self.createPocketFile(clust, i)
+            pocket = ProteinPocket(pocketFile, self.inputSystem.get().getSystemFile())
+            # if str(type(inpStruct).__name__) == 'SchrodingerAtomStruct':
+            #     pocket._maeFile = String(os.path.abspath(inpStruct.getFileName()))
+            pocket.calculateContacts()
+            outPockets.append(pocket)
+
+        if len(outPockets) > 0:
+            outPockets.buildPDBhetatmFile()
+            self._defineOutputs(outputPockets=outPockets)
 
     def createOutputStep(self):
         pass
@@ -135,3 +165,23 @@ class MDpocketAnalyze(EMProtocol):
         return warnings
 
     # --------------------------- UTILS functions -----------------------------------
+
+    def getCoords(self):
+        pdbFile = os.path.abspath(self._getExtraPath('mdpoutput-{}.pdb'.format(str(self.isoValue.get()))))
+        coords = []
+        for pdbLine in open(pdbFile):
+            line = pdbLine.split()
+            coord = line[5:8]
+            coord = list(map(float,coord))
+            coords.append(coord)
+        return coords
+
+    def createPocketFile(self, clust, i):
+        outFile = self._getExtraPath('pocketFile_{}.pdb'.format(i))
+        with open(outFile, 'w') as f:
+            for j, coord in enumerate(clust):
+                #f.write(writePDBLine(['HETATM', str(j + 1), 'APOL', 'STP', 'C', '1', *coord, 1.0, 0.0, '', 'Ve']))
+                f.write(writePDBLine(['ATOM', str(j+1), '', 'C', 'PTH', '1', *coord, 0.0, 0.0, '', 'C']))
+
+            f.write('\nEND')
+        return outFile
