@@ -1,7 +1,7 @@
 # **************************************************************************
 # *
 # * Authors:  Daniel Del Hoyo (ddelhoyo@cnb.csic.es)
-# *
+# *           Lobna Ramadane Morchadi (lobna.ramadane@alumnos.upm.es)
 # * Biocomputing Unit, CNB-CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
@@ -85,6 +85,11 @@ class Plugin(pwem.Plugin):
     def runSelIsovalue(cls, protocol, program, args, cwd=None):
         cmd = 'python {}/{}'.format(join(cls._pluginHome, 'scripts'), program)
         protocol.runJob(cmd, args, cwd=cwd)
+
+
+    @classmethod
+    def runMDpocket_2(cls, protocol, program, args, cwd=None ):
+        protocol.runJob(program, args, cwd=cwd)
 
     @classmethod  #  Test that
     def getEnviron(cls):
