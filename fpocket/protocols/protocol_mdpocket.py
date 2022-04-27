@@ -1,8 +1,8 @@
 # -*- coding: utf-8 -*-
 # **************************************************************************
 # *
-# * Authors: Daniel Del Hoyo (ddelhoyo@cnb.csic.es)
-# *          Lobna Ramadane Morchadi (lobna.ramadane@alumnos.upm.es)
+# * Authors: Lobna Ramadane Morchadi (lobna.ramadane@alumnos.upm.es)
+# *          Daniel Del Hoyo (ddelhoyo@cnb.csic.es)
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
@@ -179,3 +179,25 @@ class MDpocketAnalyze(EMProtocol):
 
             f.write('\nEND')
         return outFile
+
+    # def clusterCoords(coords, maxDist):
+    #     clusters = []
+    #     for coord in coords:
+    #         newClusters = []
+    #         newClust = [coord]
+    #         for clust in clusters:
+    #             merge = False
+    #             for cCoord in clust:
+    #                 dist = calculateDistance(coord, cCoord)
+    #                 if dist < maxDist:
+    #                     merge = True
+    #                     break
+    #
+    #             if merge:
+    #                 newClust += clust
+    #             else:
+    #                 newClusters.append(clust)
+    #
+    #         newClusters.append(newClust)
+    #         clusters = newClusters.copy()
+    #     return clusters
