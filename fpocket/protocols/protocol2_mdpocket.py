@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # **************************************************************************
 # *
-# * Authors: Daniel Del Hoyo (ddelhoyo@cnb.csic.es)
+# * Authors: Lobna Ramadane Morchadi (lobna.ramadane@alumnos.upm.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
