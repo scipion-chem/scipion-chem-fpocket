@@ -126,10 +126,6 @@ class MDpocketAnalyze(EMProtocol):
         Plugin.runSelIsovalue(self, 'extractISOPdb.py', args=self._getselIsovalueArgs(), cwd=self._getExtraPath())
 
     def defineOutputStep(self):
-        # inpStruct = self.inpPdb.get()
-        # coords = self.getCoords()
-        # self.coordsClusters = clusterCoords(coords, self.maxIntraDistance.get()) ESTO SE SUPONE
-        #QUE ESTA EN LA FUNCIÓN DE ENCIMA PERO NSPQ NO FUNCIONA...
         coords = self.getCoords()
         self.coordsClusters = clusterCoords(coords, self.maxIntraDistance.get())
 
@@ -137,8 +133,6 @@ class MDpocketAnalyze(EMProtocol):
         for i, clust in enumerate(self.coordsClusters):
             pocketFile = self.createPocketFile(clust, i)
             pocket = ProteinPocket(pocketFile, self.inputSystem.get().getSystemFile())
-            # if str(type(inpStruct).__name__) == 'SchrodingerAtomStruct':
-            #     pocket._maeFile = String(os.path.abspath(inpStruct.getFileName()))
             pocket.calculateContacts()
             outPockets.append(pocket)
 
@@ -177,11 +171,11 @@ class MDpocketAnalyze(EMProtocol):
         return coords
 
     def createPocketFile(self, clust, i):
-        outFile = self._getExtraPath('pocketFile_{}.pdb'.format(i))
+        outFile = self._getExtraPath('pocketFile_{}.pdb'.format(i+1))
         with open(outFile, 'w') as f:
             for j, coord in enumerate(clust):
-                #f.write(writePDBLine(['HETATM', str(j + 1), 'APOL', 'STP', 'C', '1', *coord, 1.0, 0.0, '', 'Ve']))
-                f.write(writePDBLine(['ATOM', str(j+1), '', 'C', 'PTH', '1', *coord, 0.0, 0.0, '', 'C']))
+                f.write(writePDBLine(['HETATM', str(j + 1), 'APOL', 'STP', 'C', '1', *coord, 1.0, 0.0, '', 'Ve']))
+                #f.write(writePDBLine(['ATOM', str(j+1), '', 'C', 'PTH', '1', *coord, 0.0, 0.0, '', 'C']))
 
             f.write('\nEND')
         return outFile
