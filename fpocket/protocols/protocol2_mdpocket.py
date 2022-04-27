@@ -86,7 +86,20 @@ class MDpocketCharacterize(EMProtocol):
     def _insertAllSteps(self):
         # Insert processing steps
         self._insertFunctionStep('mdPocketStep')
-        self._insertFunctionStep('createOutputStep')
+
+    def createPocketFileModified(self, pocketFile, selPocket, dir):
+        outFile = os.path.join(dir, 'pocketFile_Modified_{}.pdb'.format(selPocket.getObjId()))
+        modFile = open(outFile, 'w')
+        with open(pocketFile, 'r') as f:
+
+            checkWords = ("HETATM", "APOL", "C", "STP", "Ve")
+            repWords = ("ATOM  ", "", "PTH  ", "C  ", "C  ")
+            for line in f:
+                for check, rep in zip(checkWords, repWords):
+                    line = line.replace(check, rep)
+                modFile.write(line)
+            modFile.close()
+        return outFile
 
     def mdPocketStep(self):
 
@@ -96,12 +109,10 @@ class MDpocketCharacterize(EMProtocol):
             pocketFile = selPocket.getFileName()
             dir = os.path.abspath(self._getExtraPath('pocketFolder_{}'.format(selPocket.getObjId())))
             os.mkdir(dir)
-            os.system('cd {} && cp {} {} {} ./'.format(dir, trajFile, pdbFile, os.path.abspath(pocketFile)))
-            Plugin.runMDpocket_2(self, 'mdpocket', args=self._getMDpocketArgs(os.path.basename(pocketFile)), cwd=dir)
-            os.system('rm {} {} {} ./'.format(trajFile, pdbFile, os.path.abspath(pocketFile)))
-
-    def createOutputStep(self):
-        pass
+            modifiedPocketPdb = self.createPocketFileModified(os.path.abspath(pocketFile), selPocket, dir)
+            os.system('cd {} && cp {} {} {} ./'.format(dir, trajFile, pdbFile, os.path.abspath(pocketFile), modifiedPocketPdb))
+            Plugin.runMDpocket_2(self, 'mdpocket', args=self._getMDpocketArgs(os.path.basename(modifiedPocketPdb)), cwd=dir)
+            os.system('cd {} && rm {} {} {} ./'.format(dir, os.path.basename(trajFile), os.path.basename(pdbFile), os.path.basename(pocketFile)))
 
 
 
