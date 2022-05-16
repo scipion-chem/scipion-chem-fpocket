@@ -113,8 +113,10 @@ class MDpocketCharacterize(EMProtocol):
             os.system('cd {} && cp {} {} {} ./'.format(dir, trajFile, pdbFile, os.path.abspath(pocketFile), modifiedPocketPdb))
             Plugin.runMDpocket_2(self, 'mdpocket', args=self._getMDpocketArgs(os.path.basename(modifiedPocketPdb)), cwd=dir)
             os.system('cd {} && rm {} {} {} ./'.format(dir, os.path.basename(trajFile), os.path.basename(pdbFile), os.path.basename(pocketFile)))
-
-
+            os.rename('{}/mdpout_mdpocket.pdb'.format(dir), '{}/mdpout_mdpocket_{}.pdb'.format(dir, selPocket.getObjId()))
+            os.rename('{}/mdpout_mdpocket_atoms.pdb'.format(dir), '{}/mdpout_mdpocket_atoms_{}.pdb'.format(dir, selPocket.getObjId()))
+            os.rename('{}/mdpout_descriptors.txt'.format(dir), '{}/mdpout_descriptors_{}.txt'.format(dir, selPocket.getObjId()))
+            # al ser varios archivos también se podría hacer con un os.listdir pero creo que es más lioso
 
     # --------------------------- INFO functions -----------------------------------
     def _summary(self):
