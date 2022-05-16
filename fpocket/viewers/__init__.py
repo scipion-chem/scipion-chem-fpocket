@@ -5,3 +5,4 @@
 # **************************************************************************
 
 from fpocket.viewers.viewer_pockets import viewerFPocket
+from fpocket.viewers.viewer_MDpockets import viewerMDPocket
