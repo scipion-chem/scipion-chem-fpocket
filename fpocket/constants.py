@@ -25,16 +25,6 @@
 # **************************************************************************
 
 
-FPOCKET_HOME = 'FPOCKET_HOME'
-
-# Supported Versions
-V3_0 = '3.0'
-FPOCKET_DEFAULT_VERSION = V3_0
-
-FPOCKET = 'fpocket'
-
-PYMOL_HOME = 'PYMOL_HOME'
-
 CLUST_TYPES = ['Single', 'Complete', 'Average', 'Centroid']
 CLUST_TYPES_CODES = ['s', 'm', 'a', 'c']
 DIST_TYPES = ['Euclidean', 'Manhattan']

@@ -32,31 +32,32 @@ _version_ = '0.1'
 _logo = "fpocket_logo.png"
 _references = ['']
 
+FPOCKET_DIC = {'name': 'fpocket', 'version': '3.0', 'home': 'FPOCKET_HOME'}
+
 
 class Plugin(pwem.Plugin):
-    _homeVar = FPOCKET_HOME
-    _pathVars = [FPOCKET_HOME]
-    _supportedVersions = [V3_0]
-    _pluginHome = join(pwem.Config.EM_ROOT, FPOCKET + '-' + FPOCKET_DEFAULT_VERSION)
+    _homeVar = FPOCKET_DIC['home']
+    _pathVars = [FPOCKET_DIC['home']]
+    _supportedVersions = [FPOCKET_DIC['version']]
 
     @classmethod
     def _defineVariables(cls):
         """ Return and write a variable in the config file.
         """
-        cls._defineEmVar(FPOCKET_HOME, FPOCKET + '-' + FPOCKET_DEFAULT_VERSION)
+        cls._defineEmVar(FPOCKET_DIC['home'], FPOCKET_DIC['name'] + '-' + FPOCKET_DIC['version'])
 
     @classmethod
     def defineBinaries(cls, env):
         installationCmd = ''
-        print('Installing with conda')
-        installationCmd += 'conda install -y -c conda-forge fpocket -p {} && '.format(cls._pluginHome)
+        installationCmd += 'conda install -y -c conda-forge fpocket -p {} && '.\
+            format(join(pwem.Config.EM_ROOT, FPOCKET_DIC['name'] + '-' + FPOCKET_DIC['version']))
 
         # Creating validation file
-        FPOCKET_INSTALLED = '%s_installed' % FPOCKET
+        FPOCKET_INSTALLED = '%s_installed' % FPOCKET_DIC['name']
         installationCmd += 'touch %s' % FPOCKET_INSTALLED  # Flag installation finished
 
-        env.addPackage(FPOCKET,
-                       version=FPOCKET_DEFAULT_VERSION,
+        env.addPackage(FPOCKET_DIC['name'],
+                       version=FPOCKET_DIC['version'],
                        tar='void.tgz',
                        commands=[(installationCmd, FPOCKET_INSTALLED)],
                        neededProgs=["conda"],
@@ -65,8 +66,7 @@ class Plugin(pwem.Plugin):
     @classmethod
     def runFpocket(cls, protocol, program, args, cwd=None):
         """ Run Fpocket command from a given protocol. """
-        print(protocol)
-        protocol.runJob(join(cls._pluginHome, 'bin/{}'.format(program)), args, cwd=cwd)
+        protocol.runJob(join(cls.getVar(FPOCKET_DIC['home']), 'bin/{}'.format(program)), args, cwd=cwd)
 
     @classmethod  #  Test that
     def getEnviron(cls):
