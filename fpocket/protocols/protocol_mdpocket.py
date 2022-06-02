@@ -2,7 +2,7 @@
 # **************************************************************************
 # *
 # * Authors: Lobna Ramadane Morchadi (lobna.ramadane@alumnos.upm.es)
-# *          Daniel Del Hoyo (ddelhoyo@cnb.csic.es)
+# *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
 # * This program is free software; you can redistribute it and/or modify
@@ -61,19 +61,29 @@ class MDpocketAnalyze(EMProtocol):
 
         form.addSection(label='Pocket analysis parameters')
         group = form.addGroup('Features')
-        group.addParam('doGenerateReferences', params.BooleanParam, default=False,
-                       label='Druggable Pockets',
-                       help='If *No*, default parameters to select all pockets\n'
-                            'If *Yes*, to score pockets by druggability\n'
-                            'Identification of pockets most likely to bind drug like molecules'
-                       )
-
         group.addParam('isoValue', params.FloatParam, default=1.0,
                        label='Selected Isovalue',
                        help='Selected Isovalue Threshold in Pocket Analysis for PDB output')
         group.addParam('maxIntraDistance', params.FloatParam, default='2.0',
                        label='Maximum distance between pocket points (A): ',
                        help='Maximum distance between two pocket atoms to considered them same pocket')
+        group = form.addGroup('Pocket Type')
+        group.addParam('drugPock', params.BooleanParam, default=False,
+                       label='Druggable Pockets',
+                       help='Identification of pockets most likely to bind drug like molecules'
+                       )
+        group.addParam('channels', params.BooleanParam, default=False,
+                       label='Channels and small cavities',
+                       help='Detect putative channels and small cavities'
+                       )
+        group.addParam('waterPock', params.BooleanParam, default=False,
+                       label='Water binding sites',
+                       help='Detect pockets where sterically water binding is possible'
+                       )
+        group.addParam('bigPock', params.BooleanParam, default=False,
+                       label='Big external pockets',
+                       help='Detect rather big external pockets'
+                       )
 
     def _getMDpocketArgs(self):
         trajFile = os.path.abspath(self.inputSystem.get().getTrajectoryFile())
@@ -85,9 +95,23 @@ class MDpocketAnalyze(EMProtocol):
         pdbFile = os.path.abspath(self.inputSystem.get().getSystemFile())
         args += ['-f', pdbFile]
 
-        selPock = self.doGenerateReferences.get()
+        selPock = self.drugPock.get()
+        chan = self.channels.get()
+        wat = self.waterPock.get()
+        big = self.bigPock.get()
+
+
         if selPock == True:
             args += ['-S']
+
+        elif chan:
+            args += [' -m 2.8 -M 5.5 -i 3']
+
+        elif wat:
+            args += ['-m 3.5 -M 5.5 -i 3']
+
+        elif big:
+            args += ['-m 3.5 -M 10.0 -i 3']
 
         args +=['-C']
 
@@ -119,6 +143,7 @@ class MDpocketAnalyze(EMProtocol):
         self._insertFunctionStep('createOutputStep')
         self._insertFunctionStep('selIsovalue')
         self._insertFunctionStep('defineOutputStep')
+
     def mdPocketStep(self):
         Plugin.runMDpocket(self, 'mdpocket', args=self._getMDpocketArgs(), cwd=self._getExtraPath())
 
