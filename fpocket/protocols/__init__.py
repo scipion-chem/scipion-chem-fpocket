@@ -5,6 +5,6 @@
 # **************************************************************************
 
 from .protocol_fpocket import FpocketFindPockets
-from .protocol_mdpocket import MDpocketAnalyze
-from .protocol2_mdpocket import MDpocketCharacterize
+from .protocol_mdpocket_findPockets import MDpocketAnalyze
+from .protocol_mdpocket_characterizePockets import MDpocketCharacterize
 

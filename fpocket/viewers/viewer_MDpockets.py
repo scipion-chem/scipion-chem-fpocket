@@ -138,7 +138,7 @@ class viewerMDPocket(pwviewer.ProtocolViewer):
               for i, descriptor in enumerate(line.split()): #take the i (position) and descriptor value in each line of the file
                   desc_dic[header[i]].append(descriptor) #add to the dictionary the value of each descriptor
 
-      #return desc_dic
+
 
 
       desc_dic_list = list(desc_dic.values())
