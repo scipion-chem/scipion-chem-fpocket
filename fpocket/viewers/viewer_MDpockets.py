@@ -29,18 +29,28 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pyworkflow.viewer as pwviewer
 
+
 from ..protocols import MDpocketCharacterize
 import pyworkflow.protocol.params as params
 from pwchem.viewers import  PyMolView
 from pwchem.utils import natural_sort
 
 from pwem.viewers.plotter import EmPlotter, plt
+from matplotlib import ticker
+
+
+from matplotlib.ticker import Formatter
+
+from matplotlib.ticker import (MultipleLocator, FormatStrFormatter)
 
 
 class viewerMDPocket(pwviewer.ProtocolViewer):
   _label = 'Viewer dynamic pockets of MDPocket'
   _targets = [MDpocketCharacterize]
-
+  _descriptors = ['Pocket Volume', 'Solvent accessible surface area', 'Polar solvent accessible surface area', 'Apolar solvent accessible surface area',
+                  'Accessible surface area (probe of 2.2A)', 'Polar solvent accessible surface area (probe of 2.2A)', 'Apolar solvent accessible surface area (probe of 2.2A)',
+                  'Number of alpha-spheres', 'Mean alpha sphere radius', 'Mean alpha sphere solvent accessibility ','Pocket proportion of apolar alpha spheres', 'Mean local hydrophobic density',
+                  'Hidrophobicity Score', 'Volume Score', 'Polarity Score', 'Charge Score', 'Proportion of polar atoms', 'Alpha sphere density', 'Max distance between mass center and all alpha spheres']
   def __init__(self, **kwargs):
       pwviewer.ProtocolViewer.__init__(self, **kwargs)
 
@@ -62,8 +72,12 @@ class viewerMDPocket(pwviewer.ProtocolViewer):
     form.addParam('displayGraphic', params.LabelParam,
                   label='Display a graph of selected pocket: ',
                   help='Display a graphical representation of descriptors of selected pockets along MD trajectory')
-
-
+    group = form.addGroup('Pockets Description')
+    group.addParam('displayDesc', params.EnumParam,
+                   choices=self._descriptors, default=0,
+                   label='Choose the descriptor to visualize:',
+                   help='Graphical representation of descriptor variation along the MD trajectory of previous selected pocket'
+                   )
   def _getVisualizeDict(self):
       return {
         'displayPymol': self._showMdPymol,
@@ -85,9 +99,9 @@ class viewerMDPocket(pwviewer.ProtocolViewer):
     '''
     pdbFile = self.protocol.inputSystem.get().getSystemFile()
     trjFile = self.protocol.inputSystem.get().getTrajectoryFile()
-    dir = os.path.abspath(self.protocol._getExtraPath('pocketFolder_{}'.format(str(self.nPocket.get()))))
-    dynPocket ='{}/mdpout_mdpocket_{}.pdb'.format(dir, str(self.nPocket.get()))
-    dynAtoms = '{}/mdpout_mdpocket_atoms_{}.pdb'.format(dir, str(self.nPocket.get()))
+    dir = os.path.abspath(self.protocol._getExtraPath('pocketFolder_{}'.format(str(self.nPocket.get()+1))))
+    dynPocket ='{}/mdpout_mdpocket_{}.pdb'.format(dir, str(self.nPocket.get()+1))
+    dynAtoms = '{}/mdpout_mdpocket_atoms_{}.pdb'.format(dir, str(self.nPocket.get()+1))
     outPml = self.protocol._getExtraPath('pymolSimulation.pml')
     with open(outPml, 'w') as f:
       f.write(PYMOL_MD_POCK .format(os.path.abspath(pdbFile),
@@ -111,29 +125,63 @@ class viewerMDPocket(pwviewer.ProtocolViewer):
 
 
   def _displayGraphic(self,  paramName=None):
+
       dir = os.path.abspath(self.protocol._getExtraPath('pocketFolder_{}'.format(str(self.nPocket.get()+1))))
       descrFile = '{}/mdpout_descriptors_{}.txt'.format(dir, str(self.nPocket.get()+1))
-      fileTxt = open(descrFile, 'r')
-      file = fileTxt.readlines()[1:]
-      y =[]
-      for descriptors in file:
-          line = descriptors.split()
-          desc = line[1:3]
-          desc = list(map(float, desc))
-          y.append(desc)
+
+      with open(descrFile, 'r') as fileTxt:
+          desc_dic = {} #dictionary descriptor:value
+          header = fileTxt.readline().split() #create a list with the header of the file
+          for h in header:
+              desc_dic[h] = [] # inicializate the dictionary so we can append the values
+          for line in fileTxt:
+              for i, descriptor in enumerate(line.split()): #take the i (position) and descriptor value in each line of the file
+                  desc_dic[header[i]].append(descriptor) #add to the dictionary the value of each descriptor
+
+      #return desc_dic
 
 
-      snaps = []
-      for descriptors in file:
-          line = descriptors.split()
-          desc = line[0]
-          snaps.append(desc)
+      desc_dic_list = list(desc_dic.values())
+      snaps = desc_dic_list[0] #Snapshots are the first element of the list
+      d = self.displayDesc.get()+1 #To start by the second element
+      desctr = desc_dic_list[d]
 
 
-      #graphDesc = plt.plot(snaps, y)
+      # Plot of the descriptors vs snapsohts:
       self.plotter = EmPlotter(x = 1, y = 1, windowTitle='Pocket Descriptors')
-      a = self.plotter.createSubPlot("Pocket {} ".format(str(self.nPocket.get())), "Snapshots", "Descriptors")
-      a.plot(snaps, y)
+      a = self.plotter.createSubPlot("Pocket {} ".format(str(self.nPocket.get()+1)), "Snapshots", "Descriptors")
+
+      a.plot(snaps, desctr)
+
+      a.legend(labels=['{}'.format(str(self.getEnumText('displayDesc')))]) #Get the name of the list element  displayed
+
+      # Formatting the X axis and Y axis for correct values distribution
+      xmajor_formatter = FormatStrFormatter('%1.1f') # 1 space reserved for decimal value
+      ymajor_formatter = FormatStrFormatter('%1.1f')
+
+      a.xaxis.set_major_formatter(xmajor_formatter)
+
+      a.yaxis.set_major_formatter(ymajor_formatter)
+
+      a.yaxis.set_major_locator(ticker.AutoLocator())
+      #a.yaxis.set_minor_locator(ticker.AutoMinorLocator())
+
+
+      if len(snaps) < 500:
+          a.xaxis.set_major_locator(ticker.IndexLocator(offset=0, base=5))
+
+
+      else:
+          locator = ticker.AutoLocator()
+          locator.set_params(integer=True)
+          minor_locator = ticker.AutoMinorLocator()
+
+          a.xaxis.set_major_locator(locator)
+          a.xaxis.set_minor_locator(minor_locator)
+
+
+
+
       return [self.plotter]
 
 
