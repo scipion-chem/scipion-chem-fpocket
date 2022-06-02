@@ -87,19 +87,6 @@ class MDpocketCharacterize(EMProtocol):
         # Insert processing steps
         self._insertFunctionStep('mdPocketStep')
 
-    def createPocketFileModified(self, pocketFile, selPocket, dir):
-        outFile = os.path.join(dir, 'pocketFile_Modified_{}.pdb'.format(selPocket.getObjId()))
-        modFile = open(outFile, 'w')
-        with open(pocketFile, 'r') as f:
-
-            checkWords = ("HETATM", "APOL", "C", "STP", "Ve")
-            repWords = ("ATOM  ", "", "PTH  ", "C  ", "C  ")
-            for line in f:
-                for check, rep in zip(checkWords, repWords):
-                    line = line.replace(check, rep)
-                modFile.write(line)
-            modFile.close()
-        return outFile
 
     def mdPocketStep(self):
 
@@ -116,7 +103,7 @@ class MDpocketCharacterize(EMProtocol):
             os.rename('{}/mdpout_mdpocket.pdb'.format(dir), '{}/mdpout_mdpocket_{}.pdb'.format(dir, selPocket.getObjId()))
             os.rename('{}/mdpout_mdpocket_atoms.pdb'.format(dir), '{}/mdpout_mdpocket_atoms_{}.pdb'.format(dir, selPocket.getObjId()))
             os.rename('{}/mdpout_descriptors.txt'.format(dir), '{}/mdpout_descriptors_{}.txt'.format(dir, selPocket.getObjId()))
-            # al ser varios archivos también se podría hacer con un os.listdir pero creo que es más lioso
+
 
     # --------------------------- INFO functions -----------------------------------
     def _summary(self):
@@ -133,3 +120,17 @@ class MDpocketCharacterize(EMProtocol):
         return warnings
 
     # --------------------------- UTILS functions -----------------------------------
+
+    def createPocketFileModified(self, pocketFile, selPocket, dir):
+        outFile = os.path.join(dir, 'pocketFile_Modified_{}.pdb'.format(selPocket.getObjId()))
+        modFile = open(outFile, 'w')
+        with open(pocketFile, 'r') as f:
+
+            checkWords = ("HETATM", "APOL", "C", "STP", "Ve")
+            repWords = ("ATOM  ", "", "PTH  ", "C  ", "C  ")
+            for line in f:
+                for check, rep in zip(checkWords, repWords):
+                    line = line.replace(check, rep)
+                modFile.write(line)
+            modFile.close()
+        return outFile

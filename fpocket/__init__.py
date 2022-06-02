@@ -95,5 +95,6 @@ class Plugin(pwem.Plugin):
     def getEnviron(cls):
         pass
 
+
     # ---------------------------------- Utils functions  -----------------------
 

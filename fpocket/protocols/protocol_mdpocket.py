@@ -49,7 +49,7 @@ class MDpocketAnalyze(EMProtocol):
     Executes the mdpocket software to look for protein pockets.
     """
     _label = 'Analyze pockets'
-
+    _pocketTypes = ['Druggable Pockets', 'Channels and small cavities', 'Water binding sites', 'Big external pockets']
     # -------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         """ """
@@ -68,22 +68,11 @@ class MDpocketAnalyze(EMProtocol):
                        label='Maximum distance between pocket points (A): ',
                        help='Maximum distance between two pocket atoms to considered them same pocket')
         group = form.addGroup('Pocket Type')
-        group.addParam('drugPock', params.BooleanParam, default=False,
-                       label='Druggable Pockets',
-                       help='Identification of pockets most likely to bind drug like molecules'
-                       )
-        group.addParam('channels', params.BooleanParam, default=False,
-                       label='Channels and small cavities',
-                       help='Detect putative channels and small cavities'
-                       )
-        group.addParam('waterPock', params.BooleanParam, default=False,
-                       label='Water binding sites',
-                       help='Detect pockets where sterically water binding is possible'
-                       )
-        group.addParam('bigPock', params.BooleanParam, default=False,
-                       label='Big external pockets',
-                       help='Detect rather big external pockets'
-                       )
+        group.addParam('pockType', params.EnumParam,
+                   choices=self._pocketTypes, default=0,
+                   label='Choose the type of pocket:',
+                   help='Detect different type of pockets with a set of specific inner parameters'
+                   )
 
     def _getMDpocketArgs(self):
         trajFile = os.path.abspath(self.inputSystem.get().getTrajectoryFile())
@@ -95,22 +84,22 @@ class MDpocketAnalyze(EMProtocol):
         pdbFile = os.path.abspath(self.inputSystem.get().getSystemFile())
         args += ['-f', pdbFile]
 
-        selPock = self.drugPock.get()
+        selPock = self.getEnumText('pockType')
         chan = self.channels.get()
         wat = self.waterPock.get()
         big = self.bigPock.get()
 
 
-        if selPock == True:
+        if selPock == 'Druggable Pockets':
             args += ['-S']
 
-        elif chan:
+        elif selPock == 'Channels and small cavities':
             args += [' -m 2.8 -M 5.5 -i 3']
 
-        elif wat:
+        elif selPock == 'Water binding sites':
             args += ['-m 3.5 -M 5.5 -i 3']
 
-        elif big:
+        elif selPock == 'Big external pockets':
             args += ['-m 3.5 -M 10.0 -i 3']
 
         args +=['-C']

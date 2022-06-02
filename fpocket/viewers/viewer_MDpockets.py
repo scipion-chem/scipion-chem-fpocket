@@ -155,7 +155,7 @@ class viewerMDPocket(pwviewer.ProtocolViewer):
 
       a.legend(labels=['{}'.format(str(self.getEnumText('displayDesc')))]) #Get the name of the list element  displayed
 
-      # Formatting the X axis and Y axis for correct values distribution
+      # Formatting the X axis and Y axis for correct values distribution in the axis
       xmajor_formatter = FormatStrFormatter('%1.1f') # 1 space reserved for decimal value
       ymajor_formatter = FormatStrFormatter('%1.1f')
 
