@@ -49,7 +49,7 @@ class MDpocketAnalyze(EMProtocol):
     Executes the mdpocket software to look for protein pockets.
     """
     _label = 'Analyze pockets'
-    _pocketTypes = ['Druggable Pockets', 'Channels and small cavities', 'Water binding sites', 'Big external pockets']
+    _pocketTypes = ['Default Pockets', 'Druggable Pockets', 'Channels and small cavities', 'Water binding sites', 'Big external pockets']
     # -------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
         """ """
@@ -85,12 +85,13 @@ class MDpocketAnalyze(EMProtocol):
         args += ['-f', pdbFile]
 
         selPock = self.getEnumText('pockType')
-        chan = self.channels.get()
-        wat = self.waterPock.get()
-        big = self.bigPock.get()
 
 
-        if selPock == 'Druggable Pockets':
+
+        if selPock == 'Default Pockets':
+            pass
+
+        elif selPock == 'Druggable Pockets':
             args += ['-S']
 
         elif selPock == 'Channels and small cavities':
@@ -151,6 +152,8 @@ class MDpocketAnalyze(EMProtocol):
             outPockets.append(pocket)
 
         if len(outPockets) > 0:
+            outPockets.densVolFile = String(os.path.abspath(self._getExtraPath('mdpout_dens_grid.dx')))
+            outPockets.freqVolFile = String(os.path.abspath(self._getExtraPath('mdpout_freq_grid.dx')))
             outPockets.buildPDBhetatmFile()
             self._defineOutputs(outputPockets=outPockets)
 
