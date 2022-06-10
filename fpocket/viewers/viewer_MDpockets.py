@@ -162,6 +162,7 @@ class viewerMDPocket(pwviewer.ProtocolViewer):
         display resetview
         mol new {%s} type {pdb} first 0 last -1 step 1 waitfor 1 0
         mol modstyle 0 1 Licorice 0.300000 12.000000 12.000000
+        
         '''
 
       outTcl = self.protocol._getExtraPath('vmdSimulation.tcl')
