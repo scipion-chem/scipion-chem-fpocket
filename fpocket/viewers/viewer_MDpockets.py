@@ -34,6 +34,7 @@ from ..protocols import MDpocketCharacterize
 import pyworkflow.protocol.params as params
 from pwchem.viewers import  PyMolView
 from pwchem.utils import natural_sort
+from pwchem.viewers import VmdViewPopen
 
 from pwem.viewers.plotter import EmPlotter, plt
 from matplotlib import ticker
@@ -56,11 +57,6 @@ class viewerMDPocket(pwviewer.ProtocolViewer):
 
   def _defineParams(self, form):
     form.addSection(label='Pymol visualization')
-    form.addParam('displayPymol', params.LabelParam,
-                  label='Display output Pockets with Pymol: ',
-                  help='*Pymol*: display dynamic Pockets along the MD simulation.')
-
-
     group = form.addGroup('Pockets to view')
     group.addParam('nPocket', params.EnumParam, default=0, #enumParam para ver la lista de carpetas
                    choices= self._getDynPockets(),
@@ -68,11 +64,23 @@ class viewerMDPocket(pwviewer.ProtocolViewer):
                    help='Selected pockets and protein atom interactions to visualize along the MD trajectory')
 
 
-    form.addSection(label='Graphic view')
-    form.addParam('displayGraphic', params.LabelParam,
+    group = form.addGroup('Open MD simulation')
+
+    group.addParam('displayPymol', params.LabelParam,
+                  label='Display dynamic pocket with Pymol: ',
+                  help='*Pymol*: display dynamic Pockets along the MD simulation.')
+
+    group.addParam('displayMdVMD', params.LabelParam,
+                   label='Display receptor atoms of pocket with VMD: ',
+                   help='Display receptor atoms defining the binding pocket interaction in MD trajectory with VMD.'
+
+                   )
+
+
+    group = form.addGroup('Pockets Description')
+    group.addParam('displayGraphic', params.LabelParam,
                   label='Display a graph of selected pocket: ',
                   help='Display a graphical representation of descriptors of selected pockets along MD trajectory')
-    group = form.addGroup('Pockets Description')
     group.addParam('displayDesc', params.EnumParam,
                    choices=self._descriptors, default=0,
                    label='Choose the descriptor to visualize:',
@@ -81,7 +89,8 @@ class viewerMDPocket(pwviewer.ProtocolViewer):
   def _getVisualizeDict(self):
       return {
         'displayPymol': self._showMdPymol,
-        'displayGraphic': self._displayGraphic
+        'displayMdVMD': self._showMdVMD,
+        'displayDesc': self._displayGraphic
       }
 
   def _validate(self):
@@ -124,6 +133,46 @@ class viewerMDPocket(pwviewer.ProtocolViewer):
       return n_pockets
 
 
+
+  def _showMdVMD(self, paramName=None):
+      dir = os.path.abspath(self.protocol._getExtraPath('pocketFolder_{}'.format(str(self.nPocket.get() + 1))))
+      pdbFile = self.protocol.inputSystem.get().getSystemFile()
+      dynAtoms = '{}/mdpout_mdpocket_atoms_{}.pdb'.format(dir, str(self.nPocket.get() + 1))
+      trjFile = self.protocol.inputSystem.get().getTrajectoryFile()
+
+      TCL_MD_STR = '''
+        mol addrep 0
+        mol new {%s} type {pdb} first 0 last -1 step 1 waitfor 1
+        mol addfile {%s} type {xtc} first 0 last -1 step 1 waitfor 1 0
+        
+        mol color Name
+        mol representation NewCartoon 0.300000 10.000000 4.100000 0
+        mol selection protein
+        mol material Opaque
+        mol modrep 0 0
+        
+        mol addrep 0
+        mol color Name
+        mol representation Points 1.000000
+        mol selection hetero within 3 of protein
+        mol material Opaque
+        mol modrep 1 0
+        
+        
+        display resetview
+        mol new {%s} type {pdb} first 0 last -1 step 1 waitfor 1 0
+        mol modstyle 0 1 Licorice 0.300000 12.000000 12.000000
+        '''
+
+      outTcl = self.protocol._getExtraPath('vmdSimulation.tcl')
+      with open(outTcl, 'w') as f:
+          f.write(TCL_MD_STR % (pdbFile, trjFile, dynAtoms))
+      args = '-e {}'.format(outTcl)
+
+      return [VmdViewPopen(args)]
+
+
+
   def _displayGraphic(self,  paramName=None):
 
       dir = os.path.abspath(self.protocol._getExtraPath('pocketFolder_{}'.format(str(self.nPocket.get()+1))))
@@ -144,7 +193,8 @@ class viewerMDPocket(pwviewer.ProtocolViewer):
       desc_dic_list = list(desc_dic.values())
       snaps = desc_dic_list[0] #Snapshots are the first element of the list
       d = self.displayDesc.get()+1 #To start by the second element
-      desctr = desc_dic_list[d]
+      desctr = list(map(float, desc_dic_list[d]))
+
 
 
       # Plot of the descriptors vs snapsohts:
