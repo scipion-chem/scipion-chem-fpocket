@@ -151,10 +151,10 @@ class MDpocketAnalyze(EMProtocol):
             pocket.calculateContacts()
             outPockets.append(pocket)
 
-        if len(outPockets) > 0:
+        if len(outPockets) >= 0: #Sometimes with the isovalue of 1 no pockets are detected, so still we want the output to be visualized
+            outPockets.buildPDBhetatmFile()
             outPockets.densVolFile = String(os.path.abspath(self._getExtraPath('mdpout_dens_grid.dx')))
             outPockets.freqVolFile = String(os.path.abspath(self._getExtraPath('mdpout_freq_grid.dx')))
-            outPockets.buildPDBhetatmFile()
             self._defineOutputs(outputPockets=outPockets)
 
     def createOutputStep(self):
