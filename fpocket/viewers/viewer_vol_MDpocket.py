@@ -55,12 +55,19 @@ class viewerVolMDPocket(ViewerGeneralPockets):
                  )
 
   def _getVisualizeDict(self):
-    return {'displayVMD': self._showVolFileVMD}
+    visDict = super()._getVisualizeDict()
+    visDict.update({'displayVMD': self._showVolFileVMD})
+    return visDict
+
+  def _validate(self):
+    return []
+
+  # =========================================================================
 
   def _showVolFileVMD(self, paramName=None):
 
     pdbFile = self.protocol.inputSystem.get().getSystemFile()
-    print('Dens file: ', self.protocol.outputPockets.densVolFile.get())
+    #print('Dens file: ', self.protocol.outputPockets.densVolFile.get())
     densFile = self.protocol.outputPockets.densVolFile.get()
     freqFile = self.protocol.outputPockets.freqVolFile.get()
 
