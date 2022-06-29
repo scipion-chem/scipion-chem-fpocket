@@ -27,10 +27,10 @@ import os
 
 from ..protocols import FpocketFindPockets
 import pyworkflow.protocol.params as params
-from pwchem.viewers import ViewerGeneralPockets
+from pwchem.viewers import ViewerGeneralStructROIs
 from pwchem.viewers import VmdViewPopen
 
-class viewerFPocket(ViewerGeneralPockets):
+class viewerFPocket(ViewerGeneralStructROIs):
   _label = 'Viewer pockets FPocket'
   _targets = [FpocketFindPockets]
 
@@ -57,7 +57,7 @@ class viewerFPocket(ViewerGeneralPockets):
   # =========================================================================
 
   def _showAtomStructVMD(self, paramName=None):
-    oPockets = self.protocol.outputPockets
+    oPockets = self.protocol.outputStructROIs
     tclFile = oPockets.createTCL()
     outFile = oPockets.getProteinFile().split('/')[-1]
     pdbName, _ = os.path.splitext(outFile)
