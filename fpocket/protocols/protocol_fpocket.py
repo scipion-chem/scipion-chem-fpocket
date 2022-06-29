@@ -38,7 +38,7 @@ from pyworkflow.utils import Message
 from pyworkflow.object import String
 from pwem.protocols import EMProtocol
 
-from pwchem.objects import SetOfPockets, PredictPocketsOutput, ProteinPocket
+from pwchem.objects import SetOfStructROIs, PredictStructROIsOutput, StructROI
 from pwchem.utils import clean_PDB
 
 from fpocket import Plugin
@@ -49,7 +49,7 @@ class FpocketFindPockets(EMProtocol):
     Executes the fpocket software to look for protein pockets.
     """
     _label = 'Find pockets'
-    _possibleOutputs = PredictPocketsOutput
+    _possibleOutputs = PredictStructROIsOutput
 
     # -------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
@@ -141,18 +141,18 @@ class FpocketFindPockets(EMProtocol):
         pocketFiles = os.listdir(pocketsDir)
 
         inpStruct = self.inputAtomStruct.get()
-        outPockets = SetOfPockets(filename=self._getExtraPath('pockets.sqlite'))
+        outPockets = SetOfStructROIs(filename=self._getExtraPath('pockets.sqlite'))
         for pFile in pocketFiles:
             if '.pdb' in pFile:
                 pFileName = os.path.join(pocketsDir, pFile)
                 pqrFile = pFileName.replace('atm.pdb', 'vert.pqr')
-                pock = ProteinPocket(pqrFile, self.inpFile, pFileName, pClass='FPocket')
+                pock = StructROI(pqrFile, self.inpFile, pFileName, pClass='FPocket')
                 if str(type(inpStruct).__name__) == 'SchrodingerAtomStruct':
                   pock._maeFile = String(os.path.abspath(inpStruct.getFileName()))
                 outPockets.append(pock)
 
         outHETMFile = outPockets.buildPDBhetatmFile()
-        self._defineOutputs(**{self._possibleOutputs.outputPockets.name: outPockets})
+        self._defineOutputs(**{self._possibleOutputs.outputStructROIs.name: outPockets})
 
 
     # --------------------------- INFO functions -----------------------------------
