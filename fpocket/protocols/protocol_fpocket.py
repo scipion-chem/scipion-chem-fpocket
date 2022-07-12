@@ -37,9 +37,10 @@ from pyworkflow.protocol import params
 from pyworkflow.utils import Message
 from pyworkflow.object import String
 from pwem.protocols import EMProtocol
+from pwem.convert import cifToPdb
 
 from pwchem.objects import SetOfStructROIs, PredictStructROIsOutput, StructROI
-from pwchem.utils import clean_PDB
+from pwchem.utils import runOpenBabel
 
 from fpocket import Plugin
 from fpocket.constants import *
@@ -120,17 +121,18 @@ class FpocketFindPockets(EMProtocol):
         inpFile = self.getPdbInputStruct()
         inpName = self.getPdbInputStructName()
         self.inpBase, self.ext = os.path.splitext(inpName)
+        self.inpFile = os.path.abspath(self._getExtraPath(self.inpBase + '.pdb'))
         if self.ext == '.ent':
-            self.inpFile = self._getExtraPath(self.inpBase+'.pdb')
             shutil.copy(inpFile, self.inpFile)
         elif self.ext == '.cif':
-            self.inpFile = self._getExtraPath(self.inpBase + '.pdb')
-            clean_PDB(inpFile, self.inpFile)
+            cifToPdb(inpFile, self.inpFile)
+        elif self.ext == '.pdbqt':
+            args = ' -ipdbqt {} -opdb -O {}'.format(os.path.abspath(inpFile), self.inpFile)
+            runOpenBabel(protocol=self, args=args, cwd=self._getTmpPath())
+
         elif str(type(inpStruct).__name__) == 'SchrodingerAtomStruct':
-            self.inpFile = self._getExtraPath(os.path.basename(inpFile).replace(inpStruct.getExtension(), '.pdb'))
             inpStruct.convert2PDB(outPDB=self.inpFile)
         else:
-            self.inpFile = self._getExtraPath(inpName)
             shutil.copy(inpFile, self.inpFile)
 
     def fPocketStep(self):
