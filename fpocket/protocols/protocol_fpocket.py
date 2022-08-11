@@ -37,20 +37,20 @@ from pyworkflow.protocol import params
 from pyworkflow.utils import Message
 from pyworkflow.object import String
 from pwem.protocols import EMProtocol
+from pwem.convert import cifToPdb
 
-from pwchem.objects import SetOfPockets, PredictPocketsOutput
-from pwchem.utils import clean_PDB
+from pwchem.objects import SetOfStructROIs, PredictStructROIsOutput, StructROI
+from pwchem.utils import runOpenBabel
 
 from fpocket import Plugin
 from fpocket.constants import *
-from fpocket.objects import FpocketPocket
 
 class FpocketFindPockets(EMProtocol):
     """
     Executes the fpocket software to look for protein pockets.
     """
     _label = 'Find pockets'
-    _possibleOutputs = PredictPocketsOutput
+    _possibleOutputs = PredictStructROIsOutput
 
     # -------------------------- DEFINE param functions ----------------------
     def _defineParams(self, form):
@@ -121,17 +121,18 @@ class FpocketFindPockets(EMProtocol):
         inpFile = self.getPdbInputStruct()
         inpName = self.getPdbInputStructName()
         self.inpBase, self.ext = os.path.splitext(inpName)
+        self.inpFile = os.path.abspath(self._getExtraPath(self.inpBase + '.pdb'))
         if self.ext == '.ent':
-            self.inpFile = self._getExtraPath(self.inpBase+'.pdb')
             shutil.copy(inpFile, self.inpFile)
         elif self.ext == '.cif':
-            self.inpFile = self._getExtraPath(self.inpBase + '.pdb')
-            clean_PDB(inpFile, self.inpFile)
+            cifToPdb(inpFile, self.inpFile)
+        elif self.ext == '.pdbqt':
+            args = ' -ipdbqt {} -opdb -O {}'.format(os.path.abspath(inpFile), self.inpFile)
+            runOpenBabel(protocol=self, args=args, cwd=self._getTmpPath())
+
         elif str(type(inpStruct).__name__) == 'SchrodingerAtomStruct':
-            self.inpFile = self._getExtraPath(os.path.basename(inpFile).replace(inpStruct.getExtension(), '.pdb'))
             inpStruct.convert2PDB(outPDB=self.inpFile)
         else:
-            self.inpFile = self._getExtraPath(inpName)
             shutil.copy(inpFile, self.inpFile)
 
     def fPocketStep(self):
@@ -142,18 +143,18 @@ class FpocketFindPockets(EMProtocol):
         pocketFiles = os.listdir(pocketsDir)
 
         inpStruct = self.inputAtomStruct.get()
-        outPockets = SetOfPockets(filename=self._getExtraPath('pockets.sqlite'))
+        outPockets = SetOfStructROIs(filename=self._getExtraPath('pockets.sqlite'))
         for pFile in pocketFiles:
             if '.pdb' in pFile:
                 pFileName = os.path.join(pocketsDir, pFile)
                 pqrFile = pFileName.replace('atm.pdb', 'vert.pqr')
-                pock = FpocketPocket(pqrFile, self.inpFile, pFileName)
+                pock = StructROI(pqrFile, self.inpFile, pFileName, pClass='FPocket')
                 if str(type(inpStruct).__name__) == 'SchrodingerAtomStruct':
                   pock._maeFile = String(os.path.abspath(inpStruct.getFileName()))
                 outPockets.append(pock)
 
         outHETMFile = outPockets.buildPDBhetatmFile()
-        self._defineOutputs(**{self._possibleOutputs.outputPockets.name: outPockets})
+        self._defineOutputs(**{self._possibleOutputs.outputStructROIs.name: outPockets})
 
 
     # --------------------------- INFO functions -----------------------------------

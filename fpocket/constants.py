@@ -25,22 +25,9 @@
 # **************************************************************************
 
 
-FPOCKET_HOME = 'FPOCKET_HOME'
-
-# Supported Versions
-V3_0 = '3.0'
-FPOCKET_DEFAULT_VERSION = V3_0
-
-FPOCKET = 'fpocket'
-
-PYMOL_HOME = 'PYMOL_HOME'
-
 CLUST_TYPES = ['Single', 'Complete', 'Average', 'Centroid']
 CLUST_TYPES_CODES = ['s', 'm', 'a', 'c']
 DIST_TYPES = ['Euclidean', 'Manhattan']
 DIST_TYPES_CODES = ['e', 'b']
 
-ATTRIBUTES_MAPPING = {'Pocket Score': 'score', 'Drug Score': 'druggability', 'Number of alpha spheres': 'nPoints',
-                      'Pocket volume (Monte Carlo)': 'volume', 'class': 'class',
-                      'contactAtoms': 'contactAtoms', 'contactResidues': 'contactResidues'}
 
