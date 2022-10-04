@@ -2,6 +2,8 @@
 Fpocket plugin
 =======================
 
+**Documentation under development, sorry for the inconvenience**
+
 This is a **Scipion** plugin that offers different **fpocket tools**.
 These tools will make it possible to carry out different functions for predicting protein pockets
 
@@ -33,13 +35,24 @@ Fpocket is installed automatically by scipion.
 
 - **Developer's version**
 
-    1. Download repository:
+    1. **Download repository**:
 
     .. code-block::
 
         git clone https://github.com/scipion-chem/scipion-chem-fpocket.git
 
-    2. Install:
+    2. **Switch to the desired branch** (master or devel):
+
+    Scipion-chem-fpocket is constantly under development and including new features.
+    If you want a relatively older an more stable version, use master branch (default).
+    If you want the latest changes and developments, user devel branch.
+
+    .. code-block::
+
+                cd scipion-chem-fpocket
+                git checkout devel
+
+    3. **Install**:
 
     .. code-block::
 
