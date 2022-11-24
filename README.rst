@@ -4,18 +4,21 @@ Fpocket plugin
 
 **Documentation under development, sorry for the inconvenience**
 
-This is a **Scipion** plugin that offers different **fpocket tools**.
-These tools will make it possible to carry out different functions for predicting protein pockets
+This is a **Scipion** plugin that offers different tools from the
+`FPocket suite <https://github.com/Discngine/fpocket>`_.
+These tools will make it possible to carry out different functions for predicting protein pockets.
 
-Therefore, this plugin allows to use programs from the fpocket software suite
-within the Scipion framework.
+YOu can find further information on the
+`plugin documentation <https://github.com/scipion-chem/docs/blob/master/plugins/chem-fpocket.rst>`_.
+
 
 ==========================
 Install this plugin
 ==========================
 
-You will need to use `Scipion3 <https://scipion-em.github.io/docs/docs/scipion
--modes/how-to-install.html>`_ to run these protocols.
+You will need to first install
+`Scipion3 <https://scipion-em.github.io/docs/release-3.0.0/docs/scipion-modes/how-to-install.html>`_  and
+`Scipion-chem <https://github.com/scipion-chem/scipion-chem>`_ to run these protocols.
 
 
 1. **Install the plugin in Scipion**
