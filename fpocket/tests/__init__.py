@@ -25,5 +25,5 @@
 # **************************************************************************
 
 
-from fpocket.tests import *
+from fpocket.tests.test_fpocket import *
 
