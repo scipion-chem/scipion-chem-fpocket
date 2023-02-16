@@ -39,10 +39,11 @@ class viewerFPocket(ViewerGeneralStructROIs):
 
   def _defineParams(self, form):
     super()._defineParams(form)
-    form.addSection(label='VMD visualization')
-    form.addParam('displayVMD', params.LabelParam,
-                  label='Display output Pockets with VMD: ',
-                  help='*VMD*: display output Pockets and movies with VMD.')
+    section = form.getSection('Visualization of structural ROIs')
+    group = section.addGroup('VMD Alpha-Spheres Viewer')
+    group.addParam('displayVMD', params.LabelParam,
+                   label='Display output Pockets with VMD: ',
+                   help='*VMD*: display output Pockets and movies with VMD.')
 
   def _getVisualizeDict(self):
     dispDic = super()._getVisualizeDict()

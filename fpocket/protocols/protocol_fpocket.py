@@ -61,7 +61,6 @@ class FpocketFindPockets(EMProtocol):
                        label="Input atom structure",
                        help='Select the atom structure to search for pockets')
 
-        form.addSection(label='Pocket detection parameters')
         group = form.addGroup('Alpha spheres')
         group.addParam('minAlpha', params.FloatParam, default=3.4,
                        label='Min alpha sphere radius',
