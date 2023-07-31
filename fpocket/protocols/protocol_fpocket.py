@@ -93,7 +93,7 @@ class FpocketFindPockets(EMProtocol):
 
 
     def _getFpocketArgs(self):
-        args = ['-f', os.path.abspath(self.inpFile)]
+        args = ['-f', os.path.abspath(self.getLocalFileName())]
 
         #Alpha spheres
         args += ['-m', self.minAlpha.get(), '-M', self.maxAlpha.get(), '-i', self.minNSpheres.get(),
@@ -117,28 +117,32 @@ class FpocketFindPockets(EMProtocol):
     def convertInputStep(self):
         #Simply copying the input struct file into current extra file (fpocket will create output there automatically)
         inpStruct = self.inputAtomStruct.get()
-        inpFile = self.getPdbInputStruct()
-        inpName = self.getPdbInputStructName()
-        self.inpBase, self.ext = os.path.splitext(inpName)
-        self.inpFile = os.path.abspath(self._getExtraPath(self.inpBase + '.pdb'))
-        if self.ext == '.ent':
-            shutil.copy(inpFile, self.inpFile)
-        elif self.ext == '.cif':
-            cifToPdb(inpFile, self.inpFile)
-        elif self.ext == '.pdbqt':
-            args = ' -ipdbqt {} -opdb -O {}'.format(os.path.abspath(inpFile), self.inpFile)
+        inpFile = self.getInputPath()
+        inpName = self.getInputFileName()
+        _, ext = os.path.splitext(inpName)
+
+        localFile = self.getLocalFileName()
+        if ext == '.ent':
+            shutil.copy(inpFile, localFile)
+        elif ext == '.cif':
+            cifToPdb(inpFile, localFile)
+        elif ext == '.pdbqt':
+            args = ' -ipdbqt {} -opdb -O {}'.format(os.path.abspath(inpFile), localFile)
             runOpenBabel(protocol=self, args=args, cwd=self._getTmpPath())
 
         elif str(type(inpStruct).__name__) == 'SchrodingerAtomStruct':
-            inpStruct.convert2PDB(outPDB=self.inpFile)
+            inpStruct.convert2PDB(outPDB=localFile)
         else:
-            shutil.copy(inpFile, self.inpFile)
+            shutil.copy(inpFile, localFile)
 
     def fPocketStep(self):
         Plugin.runFpocket(self, 'fpocket', args=self._getFpocketArgs(), cwd=self._getExtraPath())
 
     def createOutputStep(self):
-        pocketsDir = os.path.abspath(self._getExtraPath('{}/pockets'.format(self.inpBase+'_out')))
+        inpName = self.getInputFileName()
+        _, ext = os.path.splitext(inpName)
+
+        pocketsDir = self._getExtraPath('{}/pockets'.format(self.getInputBaseName() + '_out'))
         pocketFiles = os.listdir(pocketsDir)
 
         inpStruct = self.inputAtomStruct.get()
@@ -147,12 +151,12 @@ class FpocketFindPockets(EMProtocol):
             if '.pdb' in pFile:
                 pFileName = os.path.join(pocketsDir, pFile)
                 pqrFile = pFileName.replace('atm.pdb', 'vert.pqr')
-                pock = StructROI(pqrFile, self.inpFile, pFileName, pClass='FPocket')
+                pock = StructROI(pqrFile, self.getLocalFileName(), pFileName, pClass='FPocket')
                 if str(type(inpStruct).__name__) == 'SchrodingerAtomStruct':
                   pock._maeFile = String(os.path.abspath(inpStruct.getFileName()))
                 outPockets.append(pock)
 
-        outHETMFile = outPockets.buildPDBhetatmFile()
+        outPockets.buildPDBhetatmFile()
         self._defineOutputs(**{self._possibleOutputs.outputStructROIs.name: outPockets})
 
 
@@ -182,11 +186,17 @@ class FpocketFindPockets(EMProtocol):
         return warnings
 
     # --------------------------- UTILS functions -----------------------------------
-    def getPdbInputStruct(self):
+    def getInputPath(self):
         return self.inputAtomStruct.get().getFileName()
 
-    def getPdbInputStructName(self):
-        return self.getPdbInputStruct().split('/')[-1]
+    def getInputFileName(self):
+        return self.getInputPath().split('/')[-1]
 
-    def getPDBName(self):
-        return self.getPdbInputStructName().split('.')[0]
+    def getInputBaseName(self):
+        filename = self.getInputFileName()
+        inpBase, _ = os.path.splitext(filename)
+        return inpBase
+
+    def getLocalFileName(self):
+      inpBase = self.getInputBaseName()
+      return self._getExtraPath(inpBase + '.pdb')
