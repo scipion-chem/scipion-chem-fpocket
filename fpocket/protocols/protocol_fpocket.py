@@ -127,7 +127,7 @@ class FpocketFindPockets(EMProtocol):
         elif ext == '.cif':
             cifToPdb(inpFile, localFile)
         elif ext == '.pdbqt':
-            args = ' -ipdbqt {} -opdb -O {}'.format(os.path.abspath(inpFile), localFile)
+            args = ' -ipdbqt {} -opdb -O {}'.format(os.path.abspath(inpFile), os.path.abspath(localFile))
             runOpenBabel(protocol=self, args=args, cwd=self._getTmpPath())
 
         elif str(type(inpStruct).__name__) == 'SchrodingerAtomStruct':
