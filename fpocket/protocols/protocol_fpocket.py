@@ -48,6 +48,49 @@ from fpocket.constants import *
 class FpocketFindPockets(EMProtocol):
     """
     Executes the fpocket software to look for protein pockets.
+
+User IA Manual: Fpocket Protocol
+
+The Fpocket protocol performs structure-based identification of potential ligand
+binding pockets on the surface of a protein using the geometry-driven algorithm
+implemented in the Fpocket toolkit. It is intended for users interested in
+detecting druggable cavities or exploring potential binding sites in proteins
+with or without known ligands.
+
+To execute the protocol, the user must provide a protein structure in PDB format.
+This structure should be complete in the regions of interest, and free of steric
+or topological artifacts that could interfere with pocket detection. The protocol
+uses this structural input to analyze the surface topology, detecting
+concavities, clefts, and grooves based on Voronoi tessellation and physicochemical
+criteria.
+
+Several parameters influence how pockets are defined and ranked. The user can
+adjust values such as the minimum and maximum radius used for detecting alpha
+spheres, which are geometric probes representing local cavity points. The
+clustering distance determines how nearby alpha spheres are grouped into a single
+pocket. By modifying these values, the user can fine-tune the sensitivity of the
+pocket identification process, either to focus on well-defined cavities or to
+explore broader surface features.
+
+The protocol also includes scoring functions that rank the predicted pockets
+based on volume, depth, hydrophobicity, polarity, and overall druggability.
+These scores are reported for each detected site, and the user can specify how
+many top-ranking pockets should be retained in the output. Advanced options
+allow control over whether internal or buried pockets are considered and whether
+all pockets or only druggable ones should be reported.
+
+The output includes a list of predicted pockets with coordinates, descriptors,
+and rankings, along with corresponding 3D representations that can be visualized
+directly in Scipion. These results can be exported or used as spatial constraints
+for docking, virtual screening, or mutagenesis design. Each pocket is associated
+with a score summary and can be cross-referenced with ligand positions if present.
+
+In summary, the Fpocket protocol provides a fast and interpretable approach to
+binding site prediction by combining geometric analysis with empirical scoring.
+It is well suited for early-stage structure-based drug discovery, target
+assessment, and the interpretation of protein?ligand interactions in the absence
+of experimental binding data.
+
     """
     _label = 'Find pockets'
     _possibleOutputs = PredictStructROIsOutput
