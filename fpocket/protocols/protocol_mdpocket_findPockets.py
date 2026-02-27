@@ -41,7 +41,6 @@ from pwchem import MDANALYSIS_DIC
 from pwchem.objects import SetOfStructROIs, StructROI
 from pwchem.utils import *
 from fpocket import Plugin
-from fpocket.constants import *
 
 class MDpocketAnalyze(EMProtocol):
     """
@@ -243,7 +242,7 @@ class MDpocketAnalyze(EMProtocol):
         self._insertFunctionStep('defineOutputStep')
 
     def mdPocketDefStep(self):
-        mdpocketDir = os.path.abspath(os.path.join(Plugin.getVar(MDANALYSIS_DIC['home']), 'bin'))
+        mdpocketDir = self._getMdpocketDir()
         if self.useSystem.get():
             #use system
             Plugin.runMDpocket(
@@ -299,7 +298,7 @@ class MDpocketAnalyze(EMProtocol):
         else:
             self.runMDPocketPDB()
 
-        mdpocketDir = os.path.abspath(os.path.join(Plugin.getVar(MDANALYSIS_DIC['home']), 'bin'))
+        mdpocketDir = self._getMdpocketDir()
         self.cleanUp2(mdpocketDir)
 
     def defineOutputStep(self):
@@ -335,6 +334,13 @@ class MDpocketAnalyze(EMProtocol):
         return warnings
 
     # --------------------------- UTILS functions -----------------------------------
+    def _getMdpocketDir(self):
+        mdpocketPath = shutil.which("mdpocket")
+        if mdpocketPath is None:
+            raise RuntimeError("mdpocket not found in PATH")
+
+        return os.path.dirname(os.path.abspath(mdpocketPath))
+
     def getCoords(self):
         pdbFile = os.path.abspath(self._getExtraPath('mdpoutput-{}.pdb'.format(str(self.isoValue.get()))))
         coords = []
@@ -369,7 +375,7 @@ class MDpocketAnalyze(EMProtocol):
                     self._inputSystemPDBOpenMM = os.path.basename(pdbFile)
                     break
         # move files to path where mdpocket is, it is picky with where it is executed and they input files routes
-        mdpocketDir = os.path.abspath(os.path.join(Plugin.getVar(MDANALYSIS_DIC['home']), 'bin'))
+        mdpocketDir = self._getMdpocketDir()
         shutil.copy(str(pdbFile), os.path.join(self._getExtraPath(), os.path.basename(pdbFile)))
         copyPdbFile = self._getExtraPath(os.path.basename(pdbFile))
         shutil.copy(str(copyPdbFile), os.path.join(mdpocketDir, os.path.basename(copyPdbFile)))
@@ -379,7 +385,7 @@ class MDpocketAnalyze(EMProtocol):
 
     def moveFilePDB(self):
         file = self._getExtraPath(self._inputFileTxt)
-        mdpocketDir = os.path.abspath(os.path.join(Plugin.getVar(MDANALYSIS_DIC['home']), 'bin'))
+        mdpocketDir = self._getMdpocketDir()
         shutil.copy(str(file),  os.path.join(mdpocketDir, os.path.basename(file)))
 
         return os.path.basename(file)
@@ -419,7 +425,7 @@ class MDpocketAnalyze(EMProtocol):
                 shutil.move(src, os.path.join(pdbDir, f))
 
     def runMDPocket(self):
-        mdpocketDir = os.path.abspath(os.path.join(Plugin.getVar(MDANALYSIS_DIC['home']), 'bin'))
+        mdpocketDir = self._getMdpocketDir()
         Plugin.runMDpocket(
             self,
             self._mdpocketprogram,
@@ -459,7 +465,7 @@ class MDpocketAnalyze(EMProtocol):
 
     def moveChosenPocket(self):
         specificPocket = os.path.abspath(self.getSpecifiedPocketFile())
-        mdpocketDir = os.path.abspath(os.path.join(Plugin.getVar(MDANALYSIS_DIC['home']), 'bin'))
+        mdpocketDir = self._getMdpocketDir()
         shutil.copy(str(specificPocket), os.path.join(mdpocketDir, os.path.basename(specificPocket)))
         return os.path.basename(specificPocket)
 
@@ -517,7 +523,7 @@ class MDpocketAnalyze(EMProtocol):
         return filename
 
     def runMDPocketPDB(self):
-        mdpocketDir = os.path.abspath(os.path.join(Plugin.getVar(MDANALYSIS_DIC['home']), 'bin'))
+        mdpocketDir = self._getMdpocketDir()
         Plugin.runMDpocket(
             self,
             self._mdpocketprogram,
