@@ -152,7 +152,6 @@ class FpocketFindPockets(EMProtocol):
       cifFromASFile(inpFile, os.path.abspath(self._getCifFile()))
 
     def fPocketStep(self):
-        #Plugin.runFpocket(self, 'fpocket', args=self._getFpocketArgs(), cwd=self._getExtraPath())
         Plugin.runCondaCommand(
             self,
             args=" ".join(str(a) for a in self._getFpocketArgs()),
