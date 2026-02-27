@@ -24,10 +24,11 @@
 # *
 # **************************************************************************
 
-from os.path import join, exists
+from os.path import join
 
 import pwem
 from scipion.install.funcs import InstallHelper
+from pwchem.constants import MDANALYSIS_DIC
 
 from pwchem import Plugin as pwchemPlugin
 from .constants import *
@@ -38,38 +39,31 @@ _references = ['']
 
 
 class Plugin(pwchemPlugin):
-    _homeVar = FPOCKET_DIC['home']
-    _pathVars = [FPOCKET_DIC['home']]
-    _supportedVersions = [FPOCKET_DIC['version']]
+    _homeVar = MDANALYSIS_DIC['home']
+    _pathVars = [MDANALYSIS_DIC['home']]
+    _supportedVersions = [MDANALYSIS_DIC['version']]
 
     @classmethod
     def _defineVariables(cls):
         """ Return and write a variable in the config file.
         """
-        cls._defineEmVar(FPOCKET_DIC['home'], FPOCKET_DIC['name'] + '-' + FPOCKET_DIC['version'])
+        cls._defineEmVar(MDANALYSIS_DIC['home'], MDANALYSIS_DIC['name'] + '-' + MDANALYSIS_DIC['version'])
 
     @classmethod
     def defineBinaries(cls, env, default=True):
-        installer = InstallHelper(FPOCKET_DIC['name'], packageHome=cls.getVar(FPOCKET_DIC['home']),
-                                  packageVersion=FPOCKET_DIC['version'])
+        installer = InstallHelper(MDANALYSIS_DIC['name'], packageHome=cls.getVar(MDANALYSIS_DIC['home']),
+                                  packageVersion=MDANALYSIS_DIC['version'])
 
-        fpocketPath = join(pwem.Config.EM_ROOT, cls.getEnvName(FPOCKET_DIC))
-        #installer.addCommand(
-        #    f'conda create -y -c conda-forge fpocket -p {fpocketPath}',
-        #    f'{FPOCKET_DIC["name"]}_installed'
-        #)
-
-        installer.addCommand(
-            f'conda create -y -c conda-forge -p {fpocketPath} fpocket python=3.8',
-            f'{FPOCKET_DIC["name"]}_env_created'
+        installer.getCondaEnvCommand(
+            MDANALYSIS_DIC['home'],
+            pythonVersion="3.11"
+        ).addCondaPackages(
+            ["fpocket"],  # install binary
+            channel="conda-forge",
+            targetName="fpocket_installed"
         )
 
-        installer.addCommand(
-            f'conda install -y -c conda-forge -p {fpocketPath} mdanalysis',
-            'install_mdanalysis'
-        )
-
-        scriptsDir = join(fpocketPath, "scripts")
+        scriptsDir = ("scripts")
         installer.addCommand(f'mkdir -p "{scriptsDir}"', 'create_scripts_dir')
 
         githubBase = "https://raw.githubusercontent.com/Discngine/fpocket/master/scripts"
@@ -85,7 +79,7 @@ class Plugin(pwchemPlugin):
     @classmethod
     def runFpocket(cls, protocol, program, args, cwd=None):
         """ Run Fpocket command from a given protocol. """
-        protocol.runJob(join(cls.getVar(FPOCKET_DIC['home']), 'bin/{}'.format(program)), args, cwd=cwd)
+        protocol.runJob(join(cls.getVar(MDANALYSIS_DIC['home']), 'bin/{}'.format(program)), args, cwd=cwd)
 
     @classmethod
     def runMDpocket(cls, protocol, program, args, cwd):
@@ -104,9 +98,8 @@ class Plugin(pwchemPlugin):
         `args` is a list of arguments.
         """
         from os.path import dirname, join
-        fpocketPath = cls.getVar(FPOCKET_DIC['home'])
-        repoDir = dirname(__file__)
-        scriptsDir = join(repoDir, "scripts")
+        fpocketPath = cls.getVar(MDANALYSIS_DIC['home'])
+        scriptsDir = ("scripts")
         scriptPath = join(scriptsDir, program)
         cmd = f"conda run -p {fpocketPath} python {scriptPath}"
         protocol.runJob(cmd, arguments=args, cwd=cwd)
