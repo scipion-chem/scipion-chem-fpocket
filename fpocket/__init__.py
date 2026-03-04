@@ -24,10 +24,11 @@
 # *
 # **************************************************************************
 
-from os.path import join, exists
+import os
+from os.path import join
 
-import pwem
 from scipion.install.funcs import InstallHelper
+from pwchem.constants import OPENBABEL_DIC
 
 from pwchem import Plugin as pwchemPlugin
 from .constants import *
@@ -38,38 +39,28 @@ _references = ['']
 
 
 class Plugin(pwchemPlugin):
-    _homeVar = FPOCKET_DIC['home']
-    _pathVars = [FPOCKET_DIC['home']]
-    _supportedVersions = [FPOCKET_DIC['version']]
+    _homeVar = OPENBABEL_DIC['home']
+    _pathVars = [OPENBABEL_DIC['home']]
+    _supportedVersions = [OPENBABEL_DIC['version']]
 
     @classmethod
     def _defineVariables(cls):
         """ Return and write a variable in the config file.
         """
-        cls._defineEmVar(FPOCKET_DIC['home'], FPOCKET_DIC['name'] + '-' + FPOCKET_DIC['version'])
+        cls._defineEmVar(OPENBABEL_DIC['home'], OPENBABEL_DIC['name'] + '-' + OPENBABEL_DIC['version'])
 
     @classmethod
     def defineBinaries(cls, env, default=True):
-        installer = InstallHelper(FPOCKET_DIC['name'], packageHome=cls.getVar(FPOCKET_DIC['home']),
-                                  packageVersion=FPOCKET_DIC['version'])
+        installer = InstallHelper(OPENBABEL_DIC['name'], packageHome=cls.getVar(OPENBABEL_DIC['home']),
+                                  packageVersion=OPENBABEL_DIC['version'])
 
-        fpocketPath = join(pwem.Config.EM_ROOT, cls.getEnvName(FPOCKET_DIC))
-        #installer.addCommand(
-        #    f'conda create -y -c conda-forge fpocket -p {fpocketPath}',
-        #    f'{FPOCKET_DIC["name"]}_installed'
-        #)
-
-        installer.addCommand(
-            f'conda create -y -c conda-forge -p {fpocketPath} fpocket python=3.8',
-            f'{FPOCKET_DIC["name"]}_env_created'
+        installer.addCondaPackages(
+            ["fpocket"],  # install binary
+            channel="conda-forge",
+            targetName="fpocket_installed"
         )
 
-        installer.addCommand(
-            f'conda install -y -c conda-forge -p {fpocketPath} mdanalysis',
-            'install_mdanalysis'
-        )
-
-        scriptsDir = join(fpocketPath, "scripts")
+        scriptsDir = ("scripts")
         installer.addCommand(f'mkdir -p "{scriptsDir}"', 'create_scripts_dir')
 
         githubBase = "https://raw.githubusercontent.com/Discngine/fpocket/master/scripts"
@@ -83,33 +74,23 @@ class Plugin(pwchemPlugin):
         installer.addPackage(env, dependencies=['conda'], default=default)
 
     @classmethod
+    def getPluginHome(cls, path=""):
+        import fpocket
+        fnDir = os.path.split(fpocket.__file__)[0]
+        return os.path.join(fnDir, path)
+
+    @classmethod
+    def getScriptsDir(cls, scriptName):
+        return cls.getPluginHome('scripts/%s' % scriptName)
+
+    @classmethod
     def runFpocket(cls, protocol, program, args, cwd=None):
         """ Run Fpocket command from a given protocol. """
-        protocol.runJob(join(cls.getVar(FPOCKET_DIC['home']), 'bin/{}'.format(program)), args, cwd=cwd)
+        protocol.runJob(os.path.join(cls.getVar(OPENBABEL_DIC['home']), 'bin/{}'.format(program)), args, cwd=cwd)
 
     @classmethod
     def runMDpocket(cls, protocol, program, args, cwd):
         """ Run MDpocket command from a given protocol. """
         protocol.runJob(f'./{program}', arguments=args, cwd=cwd)
-
-    @classmethod
-    def runScript(cls, protocol, program, args, cwd):
-        protocol.runJob(f'python {program}', arguments=args, cwd=cwd)
-
-    @classmethod
-    def runMyScript(cls, protocol, program, args=None, cwd=None):
-        """
-        Run a Python script inside the fpocket Conda environment.
-        `program` is the script name located in fpocket/scripts inside the plugin repo.
-        `args` is a list of arguments.
-        """
-        from os.path import dirname, join
-        fpocketPath = cls.getVar(FPOCKET_DIC['home'])
-        repoDir = dirname(__file__)
-        scriptsDir = join(repoDir, "scripts")
-        scriptPath = join(scriptsDir, program)
-        cmd = f"conda run -p {fpocketPath} python {scriptPath}"
-        protocol.runJob(cmd, arguments=args, cwd=cwd)
-
 
 

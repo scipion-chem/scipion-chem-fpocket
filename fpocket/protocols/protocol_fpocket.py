@@ -42,7 +42,7 @@ from pwem.protocols import EMProtocol
 from pwchem.objects import SetOfStructROIs, PredictStructROIsOutput, StructROI
 from pwchem.utils import runOpenBabel, cifFromASFile, getBaseName, runInParallel, performBatchThreading, writeCIFLine, \
   splitPDBLine
-from pwchem.constants import CIF_DEF_COLS, CIF_DEF_HEADER
+from pwchem.constants import CIF_DEF_COLS, CIF_DEF_HEADER, OPENBABEL_DIC
 
 from fpocket import Plugin
 from fpocket.constants import *
@@ -152,7 +152,13 @@ class FpocketFindPockets(EMProtocol):
       cifFromASFile(inpFile, os.path.abspath(self._getCifFile()))
 
     def fPocketStep(self):
-        Plugin.runFpocket(self, 'fpocket', args=self._getFpocketArgs(), cwd=self._getExtraPath())
+        Plugin.runCondaCommand(
+            self,
+            args=" ".join(str(a) for a in self._getFpocketArgs()),
+            condaDic=OPENBABEL_DIC,
+            program="fpocket",
+            cwd=self._getExtraPath()
+        )
 
     def createOutputStep(self):
         inpName = self.getInputFileName()
