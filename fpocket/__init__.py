@@ -76,7 +76,7 @@ class Plugin(pwchemPlugin):
     @classmethod
     def runFpocket(cls, protocol, program, args, cwd=None):
         """ Run Fpocket command from a given protocol. """
-        protocol.runJob(join(cls.getVar(MDANALYSIS_DIC['home']), 'bin/{}'.format(program)), args, cwd=cwd)
+        protocol.runJob(join(cls.getVar(OPENBABEL_DIC['home']), 'bin/{}'.format(program)), args, cwd=cwd)
 
     @classmethod
     def runMDpocket(cls, protocol, program, args, cwd):
@@ -95,7 +95,7 @@ class Plugin(pwchemPlugin):
         `args` is a list of arguments.
         """
         from os.path import dirname, join
-        fpocketPath = cls.getVar(MDANALYSIS_DIC['home'])
+        fpocketPath = cls.getVar(OPENBABEL_DIC['home'])
         scriptsDir = ("scripts")
         scriptPath = join(scriptsDir, program)
         cmd = f"conda run -p {fpocketPath} python {scriptPath}"
