@@ -24,9 +24,9 @@
 # *
 # **************************************************************************
 
+import os
 from os.path import join
 
-import pwem
 from scipion.install.funcs import InstallHelper
 from pwchem.constants import OPENBABEL_DIC
 
@@ -74,32 +74,23 @@ class Plugin(pwchemPlugin):
         installer.addPackage(env, dependencies=['conda'], default=default)
 
     @classmethod
+    def getPluginHome(cls, path=""):
+        import fpocket
+        fnDir = os.path.split(fpocket.__file__)[0]
+        return os.path.join(fnDir, path)
+
+    @classmethod
+    def getScriptsDir(cls, scriptName):
+        return cls.getPluginHome('scripts/%s' % scriptName)
+
+    @classmethod
     def runFpocket(cls, protocol, program, args, cwd=None):
         """ Run Fpocket command from a given protocol. """
-        protocol.runJob(join(cls.getVar(OPENBABEL_DIC['home']), 'bin/{}'.format(program)), args, cwd=cwd)
+        protocol.runJob(os.path.join(cls.getVar(OPENBABEL_DIC['home']), 'bin/{}'.format(program)), args, cwd=cwd)
 
     @classmethod
     def runMDpocket(cls, protocol, program, args, cwd):
         """ Run MDpocket command from a given protocol. """
         protocol.runJob(f'./{program}', arguments=args, cwd=cwd)
-
-    @classmethod
-    def runScript(cls, protocol, program, args, cwd):
-        protocol.runJob(f'python {program}', arguments=args, cwd=cwd)
-
-    @classmethod
-    def runMyScript(cls, protocol, program, args=None, cwd=None):
-        """
-        Run a Python script inside the fpocket Conda environment.
-        `program` is the script name located in fpocket/scripts inside the plugin repo.
-        `args` is a list of arguments.
-        """
-        from os.path import dirname, join
-        fpocketPath = cls.getVar(OPENBABEL_DIC['home'])
-        scriptsDir = ("scripts")
-        scriptPath = join(scriptsDir, program)
-        cmd = f"conda run -p {fpocketPath} python {scriptPath}"
-        protocol.runJob(cmd, arguments=args, cwd=cwd)
-
 
 

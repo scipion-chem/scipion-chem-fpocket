@@ -335,7 +335,7 @@ class MDpocketAnalyze(EMProtocol):
 
     # --------------------------- UTILS functions -----------------------------------
     def _getMdpocketDir(self):
-        mdpocketPath = shutil.which("mdpocket")
+        mdpocketPath = Plugin.getEnvPath(OPENBABEL_DIC, 'bin/mdpocket')
         if mdpocketPath is None:
             raise RuntimeError("mdpocket not found in PATH")
 
@@ -558,14 +558,13 @@ class MDpocketAnalyze(EMProtocol):
 
     def convertGroToPDB(self, input, output):
         scriptArgs = [os.path.abspath(input), os.path.abspath(output)]
-        Plugin.runMyScript(self, "groToPdb.py", args=scriptArgs)
-
+        Plugin.runScript(self, "groToPdb.py", scriptArgs, env=OPENBABEL_DIC, cwd=self._getPath())
 
     def runClustering(self, pFile, dir):
         file = os.path.join(self._getExtraPath('pocketCharacterization'), pFile)
         scriptArgs = [os.path.abspath(file), self.distanceClustering.get(),
                        os.path.abspath(dir)]
-        Plugin.runMyScript(self, "splitPockets.py", args=scriptArgs)
+        Plugin.runScript(self, "splitPockets.py", scriptArgs, env=OPENBABEL_DIC, cwd=self._getPath())
 
     def _cleanupDefaultFile(self, pocketsDir):
         if not self.chooseOutput.get():
