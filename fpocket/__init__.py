@@ -28,7 +28,7 @@ from os.path import join
 
 import pwem
 from scipion.install.funcs import InstallHelper
-from pwchem.constants import MDANALYSIS_DIC
+from pwchem.constants import OPENBABEL_DIC
 
 from pwchem import Plugin as pwchemPlugin
 from .constants import *
@@ -39,25 +39,22 @@ _references = ['']
 
 
 class Plugin(pwchemPlugin):
-    _homeVar = MDANALYSIS_DIC['home']
-    _pathVars = [MDANALYSIS_DIC['home']]
-    _supportedVersions = [MDANALYSIS_DIC['version']]
+    _homeVar = OPENBABEL_DIC['home']
+    _pathVars = [OPENBABEL_DIC['home']]
+    _supportedVersions = [OPENBABEL_DIC['version']]
 
     @classmethod
     def _defineVariables(cls):
         """ Return and write a variable in the config file.
         """
-        cls._defineEmVar(MDANALYSIS_DIC['home'], MDANALYSIS_DIC['name'] + '-' + MDANALYSIS_DIC['version'])
+        cls._defineEmVar(OPENBABEL_DIC['home'], OPENBABEL_DIC['name'] + '-' + OPENBABEL_DIC['version'])
 
     @classmethod
     def defineBinaries(cls, env, default=True):
-        installer = InstallHelper(MDANALYSIS_DIC['name'], packageHome=cls.getVar(MDANALYSIS_DIC['home']),
-                                  packageVersion=MDANALYSIS_DIC['version'])
+        installer = InstallHelper(OPENBABEL_DIC['name'], packageHome=cls.getVar(OPENBABEL_DIC['home']),
+                                  packageVersion=OPENBABEL_DIC['version'])
 
-        installer.getCondaEnvCommand(
-            MDANALYSIS_DIC['home'],
-            pythonVersion="3.11"
-        ).addCondaPackages(
+        installer.addCondaPackages(
             ["fpocket"],  # install binary
             channel="conda-forge",
             targetName="fpocket_installed"

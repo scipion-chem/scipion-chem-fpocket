@@ -37,7 +37,7 @@ from pyworkflow.protocol import params
 from pyworkflow.utils import Message
 from pwem.protocols import EMProtocol
 
-from pwchem import MDANALYSIS_DIC
+from pwchem import OPENBABEL_DIC
 from pwchem.objects import SetOfStructROIs, StructROI
 from pwchem.utils import *
 from fpocket import Plugin
@@ -276,7 +276,7 @@ class MDpocketAnalyze(EMProtocol):
         self.cleanUp(mdpocketDir)
 
     def selIsovalue(self):
-        scriptDir = os.path.abspath(os.path.join(Plugin.getVar(MDANALYSIS_DIC['home']), 'scripts'))
+        scriptDir = os.path.abspath(os.path.join(Plugin.getVar(OPENBABEL_DIC['home']), 'scripts'))
         if ((self.chooseOutput.get() == 1 or self.chooseOutput.get()==2) and not math.isclose(self.densIsoValue.get(), 8.0, rel_tol=1e-9, abs_tol=1e-9)):
             Plugin.runScript(self, 'extractISOPdb.py', args=self._getselIsovalueDensArgs(), cwd=scriptDir)
         if ((self.chooseOutput.get() == 0 or self.chooseOutput.get()==2) and not math.isclose(self.freqIsoValue.get(), 0.5, rel_tol=1e-9, abs_tol=1e-9)):
