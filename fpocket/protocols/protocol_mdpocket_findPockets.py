@@ -37,8 +37,6 @@ from pyworkflow.protocol import params
 from pyworkflow.utils import Message
 from pwem.protocols import EMProtocol
 
-from gromacs import GromacsSystem
-from openmm.objects import OpenMMSystem
 
 from pwchem import OPENBABEL_DIC
 from pwchem.objects import SetOfStructROIs, StructROI
