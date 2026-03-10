@@ -44,7 +44,118 @@ from fpocket import Plugin
 
 class MDpocketAnalyze(EMProtocol):
     """
-    Executes the mdpocket software to look for protein pockets.
+    Protocol to detect and characterize protein pockets using MDPocket.
+
+    AI Generated:
+
+        ProtMDpocketAnalyze - User Manual
+
+        Overview
+        --------
+        The MDPocket protocol identifies transient and permanent binding pockets
+        on protein structures or molecular dynamics (MD) trajectories. It uses
+        the MDPocket software to analyze pocket formation over time, capturing
+        structural fluctuations and transient cavities.
+
+        This protocol is suitable for users interested in:
+            ? Detecting transient or persistent ligand-binding pockets
+            ? Characterizing small molecule, water, or large external pockets
+            ? Guiding structure-based drug discovery or functional studies
+            ? Analyzing MD trajectories for pocket dynamics
+
+        Input Requirements
+        ------------------
+        - **MD System**:
+            A trajectory and structure from a Gromacs or OpenMM simulation.
+
+        - **Set of PDB Structures / ROIs**:
+            Alternatively, a set of static structures can be analyzed instead
+            of a full trajectory.
+
+        Search Parameters
+        -----------------
+        Users can control pocket detection and output through several parameters:
+
+        - **Transient druggable pockets**:
+            Enable assessment of drug-like binding probability over time.
+
+        - **Pocket type selection**:
+            Choose specific types such as:
+                ? Small molecule binding sites
+                ? Putative channels and small cavities
+                ? Water binding sites
+                ? Big external pockets
+
+        - **Distance clustering**:
+            Threshold used to define individual pockets from clustered grid points.
+
+        - **Output options**:
+            Select whether to keep density grids, frequency grids, or both.
+            Users can specify custom isovalues for density (default 8.0) and
+            frequency (default 0.5).
+
+        Workflow
+        --------
+        1. **Input preparation**:
+           - Copies MD trajectory or PDBs to working directory.
+           - Converts GRO files to PDB if necessary.
+
+        2. **MDPocket execution**:
+           - Runs MDPocket on the MD system or PDBs.
+           - Generates density and frequency grid outputs.
+           - Applies optional transient druggability analysis.
+
+        3. **Isovalue selection**:
+           - Extracts pockets corresponding to user-selected density or frequency
+             thresholds.
+           - Default grids are also generated unless disabled.
+
+        4. **Pocket clustering**:
+           - Clusters grid points into individual pockets based on distance threshold.
+           - Handles fallback if clustering fails.
+
+        5. **Output generation**:
+           - Produces a set of structural ROIs (StructROI objects) representing
+             pockets.
+           - Computes volumes and other descriptors for each pocket.
+           - Results saved in SQLite database and PDB files for visualization.
+
+        Outputs
+        -------
+        - **SetOfStructROIs**:
+            Contains all detected pockets with associated metadata and descriptors.
+
+        - **PDB files**:
+            Visual representation of pockets for visualization and analysis.
+
+        Interpretation
+        --------------
+        - Pocket volume indicates potential ligand capacity.
+        - Frequency and density grids reveal transient vs. persistent cavities.
+        - Pocket type classification helps distinguish between small molecule,
+          water, or large surface pockets.
+        - Transient druggable flags suggest sites likely to bind drug-like ligands.
+
+        Practical Recommendations
+        -------------------------
+        - Use MD trajectories to capture transient pockets; static PDBs are
+          sufficient for permanent pockets.
+        - Adjust clustering distance to control pocket granularity.
+        - Fine-tune density/frequency isovalues for desired sensitivity.
+        - Combine with experimental or literature data when available.
+
+        Warnings
+        --------
+        - Missing residues or gaps may impact pocket detection.
+        - Highly flexible proteins may produce variable pockets across snapshots.
+        - Clustering may fail in rare cases; fallback pockets are still provided.
+
+        Final Perspective
+        -----------------
+        MDPocket provides a detailed and dynamic view of protein pockets,
+        complementing static structure-based methods. It is a valuable tool
+        for understanding pocket formation, ligand accessibility, and
+        for early-stage drug discovery or functional analysis.
     """
     _label = 'MDPocket pocket detection'
     _pocketTypes = ['Small molecule binding sites', 'Putative channels and small cavities', 'Water binding sites', 'Big external pockets']
