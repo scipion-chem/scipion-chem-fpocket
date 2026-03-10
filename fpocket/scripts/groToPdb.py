@@ -1,6 +1,7 @@
+# -*- coding: utf-8 -*-
 # **************************************************************************
 # *
-# * Authors: Daniel Del Hoyo Gomez
+# * Authors: Blanca Pueche (blanca.pueche@cnb.csic.es)
 # *
 # * Unidad de  Bioinformatica of Centro Nacional de Biotecnologia , CSIC
 # *
@@ -20,15 +21,28 @@
 # * 02111-1307  USA
 # *
 # *  All comments concerning this program package may be sent to the
-# *  e-mail address 'scipion@cnb.csic.es'
+# *  e-mail address 'you@yourinstitution.email'
 # *
 # **************************************************************************
 
+import sys
+import MDAnalysis as mda
 
-CLUST_TYPES = ['Single', 'Complete', 'Average', 'Centroid']
-CLUST_TYPES_CODES = ['s', 'm', 'a', 'c']
-DIST_TYPES = ['Euclidean', 'Manhattan']
-DIST_TYPES_CODES = ['e', 'b']
+if len(sys.argv) != 3:
+    print("Usage: python gro2pdb.py input.gro output.pdb")
+    sys.exit(1)
 
-FPOCKET_DIC = {'name': 'fpocket', 'version': '3.0', 'home': 'FPOCKET_HOME'}
+input_file = sys.argv[1]
+output_file = sys.argv[2]
 
+try:
+    u = mda.Universe(input_file)
+except Exception as e:
+    print(f"[ERROR] Could not read GRO file: {input_file}")
+    print(e)
+    sys.exit(1)
+
+with mda.Writer(output_file) as pdb_writer:
+    pdb_writer.write(u.atoms)
+
+print(f"Converted {input_file} to {output_file} successfully.")

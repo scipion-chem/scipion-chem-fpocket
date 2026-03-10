@@ -24,53 +24,73 @@
 # *
 # **************************************************************************
 
-import pwem
-from os.path import join, exists
+import os
+from os.path import join
+
+from scipion.install.funcs import InstallHelper
+from pwchem.constants import OPENBABEL_DIC
+
+from pwchem import Plugin as pwchemPlugin
 from .constants import *
 
 _version_ = '0.1'
 _logo = "fpocket_logo.png"
 _references = ['']
 
-FPOCKET_DIC = {'name': 'fpocket', 'version': '3.0', 'home': 'FPOCKET_HOME'}
 
-
-class Plugin(pwem.Plugin):
-    _homeVar = FPOCKET_DIC['home']
-    _pathVars = [FPOCKET_DIC['home']]
-    _supportedVersions = [FPOCKET_DIC['version']]
+class Plugin(pwchemPlugin):
+    _homeVar = OPENBABEL_DIC['home']
+    _pathVars = [OPENBABEL_DIC['home']]
+    _supportedVersions = [OPENBABEL_DIC['version']]
 
     @classmethod
     def _defineVariables(cls):
         """ Return and write a variable in the config file.
         """
-        cls._defineEmVar(FPOCKET_DIC['home'], FPOCKET_DIC['name'] + '-' + FPOCKET_DIC['version'])
+        cls._defineEmVar(OPENBABEL_DIC['home'], OPENBABEL_DIC['name'] + '-' + OPENBABEL_DIC['version'])
 
     @classmethod
-    def defineBinaries(cls, env):
-        installationCmd = ''
-        installationCmd += 'conda install -y -c conda-forge fpocket -p {} && '.\
-            format(join(pwem.Config.EM_ROOT, FPOCKET_DIC['name'] + '-' + FPOCKET_DIC['version']))
+    def defineBinaries(cls, env, default=True):
+        installer = InstallHelper(OPENBABEL_DIC['name'], packageHome=cls.getVar(OPENBABEL_DIC['home']),
+                                  packageVersion=OPENBABEL_DIC['version'])
 
-        # Creating validation file
-        FPOCKET_INSTALLED = '%s_installed' % FPOCKET_DIC['name']
-        installationCmd += 'touch %s' % FPOCKET_INSTALLED  # Flag installation finished
+        installer.addCondaPackages(
+            ["fpocket"],  # install binary
+            channel="conda-forge",
+            targetName="fpocket_installed"
+        )
 
-        env.addPackage(FPOCKET_DIC['name'],
-                       version=FPOCKET_DIC['version'],
-                       tar='void.tgz',
-                       commands=[(installationCmd, FPOCKET_INSTALLED)],
-                       neededProgs=["conda"],
-                       default=True)
+        scriptsDir = ("scripts")
+        installer.addCommand(f'mkdir -p "{scriptsDir}"', 'create_scripts_dir')
+
+        githubBase = "https://raw.githubusercontent.com/Discngine/fpocket/master/scripts"
+        script = "extractISOPdb.py"
+        installer.addCommand(
+            f'curl -L {githubBase}/{script} -o "{scriptsDir}/{script}"',
+            f'download_{script}'
+        )
+        installer.addCommand(f'chmod +x "{scriptsDir}/{script}"')
+
+        installer.addPackage(env, dependencies=['conda'], default=default)
+
+    @classmethod
+    def getPluginHome(cls, path=""):
+        import fpocket
+        fnDir = os.path.split(fpocket.__file__)[0]
+        return os.path.join(fnDir, path)
+
+    @classmethod
+    def getScriptsDir(cls, scriptName):
+        return cls.getPluginHome('scripts/%s' % scriptName)
 
     @classmethod
     def runFpocket(cls, protocol, program, args, cwd=None):
         """ Run Fpocket command from a given protocol. """
-        protocol.runJob(join(cls.getVar(FPOCKET_DIC['home']), 'bin/{}'.format(program)), args, cwd=cwd)
+        protocol.runJob(os.path.join(cls.getVar(OPENBABEL_DIC['home']), 'bin/{}'.format(program)), args, cwd=cwd)
 
-    @classmethod  #  Test that
-    def getEnviron(cls):
-        pass
+    @classmethod
+    def runMDpocket(cls, protocol, program, args, cwd):
+        """ Run MDpocket command from a given protocol. """
+        protocol.runJob(f'./{program}', arguments=args, cwd=cwd)
 
-    # ---------------------------------- Utils functions  -----------------------
 
