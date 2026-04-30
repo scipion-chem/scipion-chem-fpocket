@@ -39,7 +39,7 @@ from pwem.protocols import EMProtocol
 
 
 from pwchem import OPENBABEL_DIC
-from pwchem.objects import SetOfStructROIs, StructROI
+from pwchem.objects import SetOfStructROIs, StructROI, MDSystem
 from pwchem.utils import *
 from fpocket import Plugin
 
@@ -92,7 +92,7 @@ class MDpocketAnalyze(EMProtocol):
                       label='Use MD system as input: ',
                       help='Select input files, Yes = MD System, No = set of pdbs')
         form.addParam('inputSystem', params.PointerParam, condition='useSystem',
-                       pointerClass='GromacsSystem, OpenMMSystem', allowsNull=True,
+                       pointerClass=MDSystem, allowsNull=True,
                        label="Input system: ",
                        help='Select the MD system to search for pockets.')
         form.addParam('inputPDBs', params.PointerParam, condition='not useSystem',
@@ -255,8 +255,9 @@ class MDpocketAnalyze(EMProtocol):
             if 'GromacsSystem' in type(self.inputSystem.get()).__name__:
                 pdbFile = self._inputSystemPDB
             else:
-                pdbFile = self._inputSystemPDBOpenMM
+                pdbFile = self.inputSystem.get().getTopologyFile()
             trajFile = os.path.basename(self.inputSystem.get().getTrajectoryFile())
+            print(pdbFile, trajFile)
             for f in [pdbFile, trajFile]:
                 path = os.path.join(mdpocketDir, f)
                 if os.path.exists(path):
@@ -369,12 +370,13 @@ class MDpocketAnalyze(EMProtocol):
             self.convertGroToPDB(self.inputSystem.get().getSystemFile(), pdbFile)
         else:
             systemPath = os.path.dirname(trajectory)
-            pdbFile = None
-            for f in os.listdir(systemPath):
-                if f.endswith(".pdb"):
-                    pdbFile = os.path.join(systemPath, f)
-                    self._inputSystemPDBOpenMM = os.path.basename(pdbFile)
-                    break
+            pdbFile = self.inputSystem.get().getTopologyFile()
+            self._inputSystemPDBOpenMM = os.path.basename(pdbFile)
+            # for f in os.listdir(systemPath):
+            #     if f.endswith(".pdb"):
+            #         pdbFile = os.path.join(systemPath, f)
+            #         self._inputSystemPDBOpenMM = os.path.basename(pdbFile)
+            #         break
         # move files to path where mdpocket is, it is picky with where it is executed and they input files routes
         mdpocketDir = self._getMdpocketDir()
         shutil.copy(str(pdbFile), os.path.join(self._getExtraPath(), os.path.basename(pdbFile)))
