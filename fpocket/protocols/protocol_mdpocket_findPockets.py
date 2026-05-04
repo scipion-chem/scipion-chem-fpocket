@@ -87,7 +87,7 @@ class MDpocketAnalyze(EMProtocol):
     def _defineParams(self, form):
         """ """
         form.addSection(label=Message.LABEL_INPUT)
-        form.addParam('useSystem', params.BooleanParam, deafult=True,
+        form.addParam('useSystem', params.BooleanParam, default=True,
                       label='Use MD system as input: ',
                       help='Select input files, Yes = MD System, No = set of pdbs')
         form.addParam('inputSystem', params.PointerParam, condition='useSystem',
@@ -100,7 +100,7 @@ class MDpocketAnalyze(EMProtocol):
                       help='Select the structural ROIs to use as input.')
 
         group = form.addGroup('Search parameters')
-        group.addParam('transDruggable', params.BooleanParam, deafult=False,
+        group.addParam('transDruggable', params.BooleanParam, default=False,
                       label='Search transient druggable binding pockets: ',
                       help='Assess at what point the identified pocket is likely to bind drug like molecules.')
         group.addParam('choosePocket', params.BooleanParam, default=False,
@@ -108,7 +108,7 @@ class MDpocketAnalyze(EMProtocol):
                       help='Select type of pocket.')
 
         group = form.addGroup('Output generation')
-        group.addParam('chooseOutput', params.EnumParam, deafult=2, choices=['Frequency','Density','Both'],
+        group.addParam('chooseOutput', params.EnumParam, default=2, choices=['Frequency','Density','Both'],
                        label='Output files: ',
                        help='Choose what outputs to keep.')
         group.addParam('densIsoValue', params.FloatParam, default=8.0, expertLevel=params.LEVEL_ADVANCED, condition='chooseOutput==1 or chooseOutput==2',
